@@ -198,8 +198,10 @@ void Entity::move(float xa, float ya, float za) {
 
     }
 
+    TIMER_POP_PUSH("collision.broadphase");
     std::vector<AABB>& aABBs = level->getCubes(this, bb.expand(xa, ya, za));
 
+	TIMER_POP_PUSH("collision.resolve");
 	// LAND FIRST, then x and z
     for (unsigned int i = 0; i < aABBs.size(); i++)
         ya = aABBs[i].clipYCollide(bb, ya);
@@ -324,6 +326,7 @@ void Entity::move(float xa, float ya, float za) {
     int y1 = Mth::floor(bb.y1);
     int z1 = Mth::floor(bb.z1);
 
+    TIMER_POP_PUSH("collision.blockEffects");
     if (level->hasChunksAt(x0, y0, z0, x1, y1, z1)) {
         for (int x = x0; x <= x1; x++)
             for (int y = y0; y <= y1; y++)
