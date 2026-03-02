@@ -9,10 +9,12 @@ class OptionsFile
 {
 public:
 	OptionsFile();
+    static void setDefaultSettingsPath(const std::string& path);
     void save(const StringVector& settings);
 	StringVector getOptionStrings();
 	
 private:
+	static std::string _defaultSettingsPath;
 	std::string settingsPath;
 };
 
