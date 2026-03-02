@@ -52,6 +52,8 @@ public:
 	__inline static bool isTextureIdValid(TextureId t) { return t != Textures::InvalidId; }
 
 private:
+	TextureData downscaleForBudget(const std::string& resourceName, const TextureData& img);
+	int estimateBytes(const TextureData& img) const;
 	int smoothBlend(int c0, int c1);
 	int crispBlend(int c0, int c1);
 

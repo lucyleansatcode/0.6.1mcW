@@ -5,6 +5,9 @@
 #include "../Options.h"
 #include "../../platform/time.h"
 #include "../../AppPlatform.h"
+#include "../../util/MemoryBudget.h"
+
+#include <cstring>
 
 /*static*/ int  Textures::textureChanges = 0;
 /*static*/ bool Textures::MIPMAP = false;
@@ -33,6 +36,7 @@ void Textures::clear()
 			glDeleteTextures(1, &it->second);
 	}
 	for (TextureImageMap::iterator it = loadedImages.begin(); it != loadedImages.end(); ++it) {
+		MemoryBudget::add(MemoryBudget::SUBSYS_TEXTURES, -estimateBytes(it->second));
 		if (!(it->second).memoryHandledExternally)
 			delete[] (it->second).data;
 	}
@@ -79,6 +83,9 @@ TextureId Textures::loadTexture( const std::string& resourceName, bool inTexture
 
 TextureId Textures::assignTexture( const std::string& resourceName, const TextureData& img )
 {
+	TextureData managed = downscaleForBudget(resourceName, img);
+	const TextureData& src = managed.data ? managed : img;
+
 	TextureId id;
 	glGenTextures(1, &id);
 
@@ -104,42 +111,117 @@ TextureId Textures::assignTexture( const std::string& resourceName, const Textur
 		glTexParameteri2(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	}
 
-    switch (img.format)
+    switch (src.format)
     {
         case TEXF_COMPRESSED_PVRTC_4444:
         case TEXF_COMPRESSED_PVRTC_565:
         case TEXF_COMPRESSED_PVRTC_5551:
         {
 #if defined(__APPLE__)
-            int fmt = img.transparent? GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG : GL_COMPRESSED_RGB_PVRTC_4BPPV1_IMG;
-            glCompressedTexImage2D(GL_TEXTURE_2D, 0, fmt, img.w, img.h, 0, img.numBytes, img.data);
+            int fmt = src.transparent? GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG : GL_COMPRESSED_RGB_PVRTC_4BPPV1_IMG;
+            glCompressedTexImage2D(GL_TEXTURE_2D, 0, fmt, src.w, src.h, 0, src.numBytes, src.data);
 #endif
             break;
         }
 
         default:
-            const GLint mode = img.transparent? GL_RGBA : GL_RGB;
+            const GLint mode = src.transparent? GL_RGBA : GL_RGB;
 
-            if (img.format == TEXF_UNCOMPRESSED_565) {
-                glTexImage2D2(GL_TEXTURE_2D, 0, mode, img.w, img.h, 0, mode, GL_UNSIGNED_SHORT_5_6_5, img.data);
+            if (src.format == TEXF_UNCOMPRESSED_565) {
+                glTexImage2D2(GL_TEXTURE_2D, 0, mode, src.w, src.h, 0, mode, GL_UNSIGNED_SHORT_5_6_5, src.data);
             }
-            else if (img.format == TEXF_UNCOMPRESSED_4444) {
-                glTexImage2D2(GL_TEXTURE_2D, 0, mode, img.w, img.h, 0, mode, GL_UNSIGNED_SHORT_4_4_4_4, img.data);
+            else if (src.format == TEXF_UNCOMPRESSED_4444) {
+                glTexImage2D2(GL_TEXTURE_2D, 0, mode, src.w, src.h, 0, mode, GL_UNSIGNED_SHORT_4_4_4_4, src.data);
             }
-            else if (img.format == TEXF_UNCOMPRESSED_5551) {
-                glTexImage2D2(GL_TEXTURE_2D, 0, mode, img.w, img.h, 0, mode, GL_UNSIGNED_SHORT_5_5_5_1, img.data);
+            else if (src.format == TEXF_UNCOMPRESSED_5551) {
+                glTexImage2D2(GL_TEXTURE_2D, 0, mode, src.w, src.h, 0, mode, GL_UNSIGNED_SHORT_5_5_5_1, src.data);
             }
             else {
-                glTexImage2D2(GL_TEXTURE_2D, 0, mode, img.w, img.h, 0, mode, GL_UNSIGNED_BYTE, img.data);
+                glTexImage2D2(GL_TEXTURE_2D, 0, mode, src.w, src.h, 0, mode, GL_UNSIGNED_BYTE, src.data);
             }
             break;
     }
 
     //LOGI("Adding id: %d to map\n", id);
 	idMap.insert(std::make_pair(resourceName, id));
-	loadedImages.insert(std::make_pair(id, img));
+	loadedImages.insert(std::make_pair(id, src));
+	MemoryBudget::add(MemoryBudget::SUBSYS_TEXTURES, estimateBytes(src));
 
 	return id;
+}
+
+TextureData Textures::downscaleForBudget(const std::string& resourceName, const TextureData& img)
+{
+	static const int kMaxTextureDimension = 1024;
+
+	TextureData out;
+	out.data = NULL;
+
+	if (img.data == NULL)
+		return out;
+
+	if (img.w <= kMaxTextureDimension && img.h <= kMaxTextureDimension &&
+		MemoryBudget::hasBudget(MemoryBudget::SUBSYS_TEXTURES, estimateBytes(img))) {
+		return out;
+	}
+
+	if (img.format != TEXF_UNCOMPRESSED_8888 && img.format != TEXF_UNCOMPRESSED_565 &&
+		img.format != TEXF_UNCOMPRESSED_4444 && img.format != TEXF_UNCOMPRESSED_5551) {
+		LOGI("[tex] budget warning: %s too large but not downscalable in format %d\n", resourceName.c_str(), (int)img.format);
+		return out;
+	}
+
+	const int bpp = (img.format == TEXF_UNCOMPRESSED_8888) ? 4 : 2;
+	int w = img.w;
+	int h = img.h;
+	while ((w > kMaxTextureDimension || h > kMaxTextureDimension || !MemoryBudget::hasBudget(MemoryBudget::SUBSYS_TEXTURES, w * h * bpp)) && (w > 16 || h > 16)) {
+		if (w > 16) w >>= 1;
+		if (h > 16) h >>= 1;
+	}
+
+	if (w == img.w && h == img.h)
+		return out;
+
+	out = img;
+	out.w = w;
+	out.h = h;
+	out.numBytes = w * h * bpp;
+	out.data = new unsigned char[out.numBytes];
+	out.memoryHandledExternally = false;
+
+	for (int y = 0; y < h; ++y) {
+		int srcY = (y * img.h) / h;
+		for (int x = 0; x < w; ++x) {
+			int srcX = (x * img.w) / w;
+			const int srcIndex = (srcY * img.w + srcX) * bpp;
+			const int dstIndex = (y * w + x) * bpp;
+			memcpy(out.data + dstIndex, img.data + srcIndex, bpp);
+		}
+	}
+
+	if (img.format == TEXF_UNCOMPRESSED_8888) {
+		out.format = TEXF_UNCOMPRESSED_4444;
+		out.numBytes = w * h * 2;
+		unsigned short* packed = new unsigned short[w * h];
+		for (int i = 0; i < w * h; ++i) {
+			unsigned char* px = out.data + i * 4;
+			packed[i] = (unsigned short)(((px[0] >> 4) << 12) | ((px[1] >> 4) << 8) | ((px[2] >> 4) << 4) | (px[3] >> 4));
+		}
+		delete[] out.data;
+		out.data = (unsigned char*)packed;
+	}
+
+	LOGI("[tex] downscaled %s from %dx%d to %dx%d (fmt %d)\n", resourceName.c_str(), img.w, img.h, out.w, out.h, (int)out.format);
+	return out;
+}
+
+int Textures::estimateBytes(const TextureData& img) const
+{
+	if (img.numBytes > 0)
+		return img.numBytes;
+	if (img.w <= 0 || img.h <= 0)
+		return 0;
+	return img.w * img.h * (img.format == TEXF_UNCOMPRESSED_8888 ? 4 : 2);
 }
 
 const TextureData* Textures::getTemporaryTextureData( TextureId id )
@@ -355,4 +437,3 @@ int Textures::crispBlend( int c0, int c1 )
 //      loadedImages.erase(id);
 //      glDeleteTextures(1, (const GLuint*)&id);
 //  }
-

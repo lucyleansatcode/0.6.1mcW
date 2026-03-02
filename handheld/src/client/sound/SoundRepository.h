@@ -5,6 +5,7 @@
 #include <string>
 #include "Sound.h"
 #include "../../util/Mth.h"
+#include "../../util/MemoryBudget.h"
 #include "../../platform/log.h"
 
 class SoundRepository
@@ -36,6 +37,11 @@ public:
 
 	void add(const std::string& name, const SoundDesc& sound) {
 		if (!sound.isValid()) return;
+		if (!MemoryBudget::hasBudget(MemoryBudget::SUBSYS_AUDIO, sound.size)) {
+			LOGI("[audio] dropping sound %s (%d bytes) due to audio budget\n", name.c_str(), sound.size);
+			return;
+		}
+        MemoryBudget::add(MemoryBudget::SUBSYS_AUDIO, sound.size);
         SoundMap::iterator it = map.find(name);
 		if (it == map.end()) {
 			SoundList list;
