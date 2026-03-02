@@ -22,6 +22,7 @@
 #include "Textures.h"
 #include "tileentity/TileEntityRenderDispatcher.h"
 #include "../particle/BreakingItemParticle.h"
+#include "../../util/MemoryBudget.h"
 
 #include "../../client/player/LocalPlayer.h"
 
@@ -174,6 +175,7 @@ void LevelRenderer::allChanged()
 
 	chunks = new Chunk*[chunksLength];
 	sortedChunks = new Chunk*[chunksLength];
+	MemoryBudget::add(MemoryBudget::SUBSYS_CHUNK_MESH, 2 * chunksLength * (int)sizeof(Chunk*));
 
 	int id = 0;
 	int count = 0;
@@ -227,8 +229,9 @@ void LevelRenderer::deleteChunks()
 	for (int z = 0; z < zChunks; ++z)
 	for (int y = 0; y < yChunks; ++y)
 	for (int x = 0; x < xChunks; ++x) {
-		int c = getLinearCoord(x, y, z);
-		delete chunks[c];
+	int c = getLinearCoord(x, y, z);
+	if (chunks[c] != NULL) chunks[c]->evictMesh();
+	delete chunks[c];
 	}
 
 	delete[] chunks;
@@ -236,6 +239,7 @@ void LevelRenderer::deleteChunks()
 
 	delete[] sortedChunks;
 	sortedChunks = NULL;
+	MemoryBudget::add(MemoryBudget::SUBSYS_CHUNK_MESH, -2 * chunksLength * (int)sizeof(Chunk*));
 }
 
 void LevelRenderer::resortChunks( int xc, int yc, int zc )
@@ -592,6 +596,30 @@ void LevelRenderer::tick()
 
 bool LevelRenderer::updateDirtyChunks( Mob* player, bool force )
 {
+	const int kEvictDistanceSqr = 110 * 110;
+	const int kKeepCompiledNearPlayer = 180;
+	int compiledCount = 0;
+	for (int i = 0; i < chunksLength; ++i) {
+		Chunk* c = chunks[i];
+		if (c != NULL && !c->isDirty() && !c->isEmpty()) {
+			compiledCount++;
+			if (c->distanceToSqr(player) > kEvictDistanceSqr) {
+				c->evictMesh();
+			}
+		}
+	}
+
+	if (compiledCount > kKeepCompiledNearPlayer) {
+		int evicted = 0;
+		for (int i = chunksLength - 1; i >= 0 && compiledCount - evicted > kKeepCompiledNearPlayer; --i) {
+			Chunk* c = sortedChunks[i];
+			if (c != NULL && !c->isDirty() && !c->isEmpty()) {
+				c->evictMesh();
+				evicted++;
+			}
+		}
+	}
+
 	bool slow = false;
 
 	if (slow) {

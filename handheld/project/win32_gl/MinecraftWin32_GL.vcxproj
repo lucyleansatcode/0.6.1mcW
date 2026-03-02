@@ -141,6 +141,7 @@
     <ClCompile Include="..\..\src\client\renderer\entity\TripodCameraRenderer.cpp" />
     <ClCompile Include="..\..\src\client\renderer\GameRenderer.cpp" />
     <ClCompile Include="..\..\src\client\renderer\gles.cpp" />
+    <ClCompile Include="..\..\src\client\renderer\RenderBackend.cpp" />
     <ClCompile Include="..\..\src\client\renderer\ItemInHandRenderer.cpp" />
     <ClCompile Include="..\..\src\client\renderer\LevelRenderer.cpp" />
     <ClCompile Include="..\..\src\client\renderer\ptexture\DynamicTexture.cpp" />

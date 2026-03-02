@@ -21,6 +21,7 @@ public:
     void setPos(int x, int y, int z);
 
 	void rebuild();
+	void evictMesh();
 	void setDirty();
 	void setClean();
 	bool isDirty();
@@ -69,6 +70,7 @@ private:
 	bool compiled;
 	bool dirty;
     bool _empty;
+    int meshBytes;
 };
 
 #endif /*NET_MINECRAFT_CLIENT_RENDERER__Chunk_H__*/
