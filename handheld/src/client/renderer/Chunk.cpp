@@ -7,6 +7,7 @@
 #include "../../world/level/Region.h"
 #include "../../world/level/chunk/LevelChunk.h"
 #include "../../util/Mth.h"
+#include "../../util/PerfTimer.h"
 //#include "../../platform/time.h"
 
 /*static*/ int Chunk::updates = 0;
@@ -69,6 +70,7 @@ void Chunk::translateToPos()
 void Chunk::rebuild()
 {
 	if (!dirty) return;
+	TIMER_PUSH("chunk.rebuild");
 	//if (!visible) return;
 	updates++;
 
@@ -181,6 +183,7 @@ void Chunk::rebuild()
     //sw.printEvery(1, "rebuild-");
 	skyLit = LevelChunk::touchedSky;
 	compiled = true;
+	TIMER_POP();
 	return;
 }
 

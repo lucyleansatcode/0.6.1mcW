@@ -62,10 +62,18 @@ public:
         return *this;
     }
 
+    static float fastInvSqrt(float v) {
+        union { float f; unsigned int i; } conv = { v };
+        conv.i = 0x5f3759df - (conv.i >> 1);
+        float estimate = conv.f;
+        return estimate * (1.5f - 0.5f * v * estimate * estimate);
+    }
+
     Vec3 normalized() const {
-        float dist = sqrt(x * x + y * y + z * z);
-        if (dist < 0.0001f) return Vec3();
-        return Vec3(x / dist, y / dist, z / dist); // newTemp
+        const float lenSqr = x * x + y * y + z * z;
+        if (lenSqr < 0.00000001f) return Vec3();
+        const float invDist = fastInvSqrt(lenSqr);
+        return Vec3(x * invDist, y * invDist, z * invDist); // newTemp
     }
 
     float dot(const Vec3& p) const {

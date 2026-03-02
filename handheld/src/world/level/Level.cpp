@@ -1829,21 +1829,25 @@ static int maxLoop = 0;
 void Level::updateLight(const LightLayer& layer, int x0, int y0, int z0, int x1, int y1, int z1, bool join) {
     if ((dimension->hasCeiling && &layer == &LightLayer::Sky) || !_updateLights) return;
 
+    TIMER_PUSH("blockLighting.schedule");
     maxLoop++;
 	//if (x0 < -5 || z0 < -5) LOGI("x, z: %d, %d\n", x0, z0);
     if (maxLoop == 50) {
         maxLoop--;
+        TIMER_POP();
         return;
     }
     int xm = (x1 + x0) / 2;
     int zm = (z1 + z0) / 2;
     if (!hasChunkAt(xm, Level::DEPTH / 2, zm)) {
         maxLoop--;
+        TIMER_POP();
         return;
     }
     if (getChunkAt(xm, zm)->isEmpty())
 	{
 		maxLoop--;
+		TIMER_POP();
 		return;
 	}
     int count = _lightUpdates.size();
@@ -1854,6 +1858,7 @@ void Level::updateLight(const LightLayer& layer, int x0, int y0, int z0, int x1,
             LightUpdate& last = _lightUpdates[_lightUpdates.size() - i - 1];
             if (last.layer == &layer && last.expandToContain(x0, y0, z0, x1, y1, z1)) {
                 maxLoop--;
+                TIMER_POP();
                 return;
             }
         }
@@ -1865,6 +1870,7 @@ void Level::updateLight(const LightLayer& layer, int x0, int y0, int z0, int x1,
         _lightUpdates.clear();
     }
     maxLoop--;
+    TIMER_POP();
 }
 //
 //    // int xxo, yyo, zzo;
