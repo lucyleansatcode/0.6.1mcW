@@ -1,4 +1,5 @@
 #include "gles.h"
+#include "RenderBackend.h"
 #include <cmath>
 #include <cstdio>
 
@@ -40,7 +41,6 @@ void __gluMakeIdentityf(GLfloat m[16]) {
 void glInit()
 {
 #ifndef OPENGL_ES
-	
 	GLenum err = glewInit();
 	printf("Err: %d\n", err);
 #endif
@@ -55,14 +55,8 @@ void anGenBuffers(GLsizei n, GLuint* buffers) {
 #ifdef USE_VBO
 void drawArrayVT(int bufferId, int vertices, int vertexSize /* = 24 */, unsigned int mode /* = GL_TRIANGLES */) {
 	//if (Options::debugGl) LOGI("drawArray\n");
-	glBindBuffer2(GL_ARRAY_BUFFER, bufferId);
-	glTexCoordPointer2(2, GL_FLOAT, vertexSize, (GLvoid*) (3 * 4));
-	glEnableClientState2(GL_TEXTURE_COORD_ARRAY);
-	glVertexPointer2(3, GL_FLOAT, vertexSize, 0);
-	glEnableClientState2(GL_VERTEX_ARRAY);
-	glDrawArrays2(mode, 0, vertices);
-	glDisableClientState2(GL_VERTEX_ARRAY);
-	glDisableClientState2(GL_TEXTURE_COORD_ARRAY);
+	RenderBackend::bindArrayBuffer(bufferId);
+	RenderBackend::submitTexturedMesh(vertices, vertexSize, mode);
 }
 
 #ifndef drawArrayVT_NoState
