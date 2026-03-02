@@ -1,4 +1,5 @@
 #include "LevelRenderer.h"
+#include "../../platform/StoragePath.h"
 
 #include "DirtyChunkSorter.h"
 #include "DistanceChunkSorter.h"
@@ -1276,8 +1277,9 @@ void LevelRenderer::takePicture( TripodCamera* cam, Entity* entity )
 	_t_keepPic = -1;
 
 	// Save image
-	static char filename[256];
-	sprintf(filename, "%s/games/com.mojang/img_%.4d.jpg", mc->externalStoragePath.c_str(), getTimeMs());
+	const std::string screenshotDir = PlatformStorage::getScreenshotDirectory(mc->externalStoragePath);
+	static char filename[512];
+	sprintf(filename, "%s/img_%.4d.jpg", screenshotDir.c_str(), getTimeMs());
 
 	mc->platform()->saveScreenshot(filename, mc->width, mc->height);
 }

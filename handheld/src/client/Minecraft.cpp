@@ -33,6 +33,7 @@
 #include "sound/SoundEngine.h"
 #endif
 #include "../platform/CThread.h"
+#include "../platform/StoragePath.h"
 #include "../platform/input/Mouse.h"
 #include "../AppPlatform.h"
 #include "../Performance.h"
@@ -1134,6 +1135,7 @@ bool Minecraft::supportNonTouchScreen() {
 void Minecraft::init()
 {
 	options.minecraft = this;
+	OptionsFile::setDefaultSettingsPath(PlatformStorage::getOptionsFilePath(externalStoragePath));
 	options.initDefaultValues();
 #ifndef STANDALONE_SERVER
 	checkGlError("Init enter");

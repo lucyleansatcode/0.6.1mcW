@@ -31,6 +31,10 @@
 #include "network/RakNetInstance.h"
 #include "network/ClientSideNetworkHandler.h"
 #include "client/gui/screens/ProgressScreen.h"
+#ifndef STANDALONE_SERVER
+#include "client/gui/screens/DisconnectionScreen.h"
+#endif
+#include "platform/StoragePath.h"
 
 //#include "world/entity/player/Inventory2.h"
 
@@ -98,10 +102,15 @@ void NinecraftApp::init()
 	I18n::loadLanguage(platform(), "en_US");
 #endif
 
+	std::string storageError;
+	const bool storageReady = PlatformStorage::initializeWritableStorage(externalStoragePath, externalCacheStoragePath, storageError);
+
 	Minecraft::init();
 
 #if !defined(DEMO_MODE) && !defined(APPLE_DEMO_PROMOTION) && !defined(NO_STORAGE)
-	storageSource = new ExternalFileLevelStorageSource(externalStoragePath, externalCacheStoragePath);
+	storageSource = storageReady
+		? static_cast<LevelStorageSource*>(new ExternalFileLevelStorageSource(externalStoragePath, externalCacheStoragePath))
+		: static_cast<LevelStorageSource*>(new MemoryLevelStorageSource());
 #else
 	storageSource = new MemoryLevelStorageSource();
 #endif
@@ -109,8 +118,15 @@ void NinecraftApp::init()
 
 #ifndef STANDALONE_SERVER
 	LOGI("This: %p\n", this);
-	screenChooser.setScreen(SCREEN_STARTMENU);
+	if (storageReady) {
+		screenChooser.setScreen(SCREEN_STARTMENU);
+	} else {
+		setScreen(new DisconnectionScreen(storageError));
+	}
 #else
+	if (!storageReady) {
+		LOGE("Storage check failed: %s\n", storageError.c_str());
+	}
 	user->name = "Server";
 	hostMultiplayer();
 #endif

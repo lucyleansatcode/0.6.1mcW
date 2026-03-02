@@ -2,14 +2,14 @@
 #include <stdio.h>
 #include <string.h>
 
+std::string OptionsFile::_defaultSettingsPath;
+
 OptionsFile::OptionsFile() {
-#ifdef __APPLE__
-	settingsPath = "./Documents/options.txt";
-#elif defined(ANDROID)
-	settingsPath = "options.txt";
-#else
-	settingsPath = "options.txt";
-#endif
+    settingsPath = _defaultSettingsPath.empty() ? "options.txt" : _defaultSettingsPath;
+}
+
+void OptionsFile::setDefaultSettingsPath(const std::string& path) {
+    _defaultSettingsPath = path;
 }
 
 void OptionsFile::save(const StringVector& settings) {
@@ -24,7 +24,7 @@ void OptionsFile::save(const StringVector& settings) {
 
 StringVector OptionsFile::getOptionStrings() {
 	StringVector returnVector;
-	FILE* pFile = fopen(settingsPath.c_str(), "w");
+	FILE* pFile = fopen(settingsPath.c_str(), "r");
 	if(pFile != NULL) {
 		char lineBuff[128];
 		while(fgets(lineBuff, sizeof lineBuff, pFile)) {
