@@ -27,6 +27,7 @@
 #include "Textures.h"
 #include "../gui/components/ImageButton.h"
 #include "Tesselator.h"
+#include "RenderBackend.h"
 
 static int _shTicks = -1;
 
@@ -103,9 +104,9 @@ void GameRenderer::setupCamera(float a, int eye) {
     if (zoom != 1) {
         glTranslatef2((float) zoom_x, (float) -zoom_y, 0);
 		glScalef2(zoom, zoom, 1);
-        gluPerspective(_setupCameraFov = getFov(a, true), mc->width / (float) mc->height, 0.05f, renderDistance);
+        RenderBackend::setPerspective(_setupCameraFov = getFov(a, true), mc->width / (float) mc->height, 0.05f, renderDistance);
     } else {
-        gluPerspective(_setupCameraFov = getFov(a, true), mc->width / (float) mc->height, 0.05f, renderDistance);
+        RenderBackend::setPerspective(_setupCameraFov = getFov(a, true), mc->width / (float) mc->height, 0.05f, renderDistance);
     }
 
     glMatrixMode(GL_MODELVIEW);
@@ -864,7 +865,7 @@ void GameRenderer::setupGuiScreen( bool clearColorBuffer )
 	glClear(clearBits);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity2();
-	glOrthof(0, (GLfloat)screenWidth, (GLfloat)screenHeight, 0, 2000, 3000);
+	RenderBackend::setOrtho(0, (GLfloat)screenWidth, (GLfloat)screenHeight, 0, 2000, 3000);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity2();
 	glTranslatef2(0, 0, -2000);
@@ -885,7 +886,7 @@ void GameRenderer::renderItemInHand(float a, int eye) {
 			if (fov != _setupCameraFov) {
 				glMatrixMode(GL_PROJECTION);
 				glLoadIdentity();
-				gluPerspective(fov, mc->width / (float) mc->height, 0.05f, renderDistance);
+				RenderBackend::setPerspective(fov, mc->width / (float) mc->height, 0.05f, renderDistance);
 				glMatrixMode(GL_MODELVIEW);
 			}
             itemInHandRenderer->render(a);
@@ -926,7 +927,7 @@ void GameRenderer::prepareAndRenderClouds( LevelRenderer* levelRenderer, float a
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix2();
 	glLoadIdentity2();
-	gluPerspective(_setupCameraFov = getFov(a, true), mc->width / (float) mc->height, 2, renderDistance * 512);
+	RenderBackend::setPerspective(_setupCameraFov = getFov(a, true), mc->width / (float) mc->height, 2, renderDistance * 512);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix2();
 	setupFog(0);

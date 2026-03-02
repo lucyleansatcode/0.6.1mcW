@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
+#include "RenderBackend.h"
 
 Tesselator Tesselator::instance(sizeof(GLfloat) * MAX_FLOATS); // max size in bytes
 
@@ -93,8 +94,8 @@ RenderChunk Tesselator::end( bool useMine, int bufferId )
 #endif
 		int access = GL_STATIC_DRAW;//(accessMode==ACCESS_DYNAMIC) ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
 		int bytes = p * sizeof(VERTEX);
-		glBindBuffer2(GL_ARRAY_BUFFER, bufferId);
-		glBufferData2(GL_ARRAY_BUFFER, bytes, _varray, access); // GL_STREAM_DRAW
+		RenderBackend::bindArrayBuffer(bufferId);
+		RenderBackend::uploadArrayBuffer(_varray, bytes, access != GL_STATIC_DRAW); // GL_STREAM_DRAW
 		totalSize += bytes;
 
 #ifndef USE_VBO
@@ -384,8 +385,8 @@ void Tesselator::draw()
 		
 		int access = GL_DYNAMIC_DRAW;//(accessMode==ACCESS_DYNAMIC) ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
 		int bytes = p * sizeof(VERTEX);
-		glBindBuffer2(GL_ARRAY_BUFFER, bufferId);
-		glBufferData2(GL_ARRAY_BUFFER, bytes, _varray, access); // GL_STREAM_DRAW
+		RenderBackend::bindArrayBuffer(bufferId);
+		RenderBackend::uploadArrayBuffer(_varray, bytes, access != GL_STATIC_DRAW); // GL_STREAM_DRAW
 
 		if (hasTexture) {
 			glTexCoordPointer2(2, GL_FLOAT, VertexSizeBytes, (GLvoid*) (3 * 4));

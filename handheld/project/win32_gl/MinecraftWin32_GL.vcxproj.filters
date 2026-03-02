@@ -54,6 +54,9 @@
     <ClCompile Include="..\..\src\client\renderer\gles.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\client\renderer\RenderBackend.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\client\renderer\Tesselator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

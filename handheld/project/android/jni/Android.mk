@@ -5,6 +5,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE    := minecraftpe
 LOCAL_SRC_FILES := ../../../src/main.cpp \
                    ../../../src/main_android.cpp \
+                   ../../../src/platform/android/AndroidPlatformAdapter.cpp \
                    ../../../src/platform/audio/SoundSystemSL.cpp \
                    ../../../src/platform/input/Controller.cpp \
                    ../../../src/platform/input/Keyboard.cpp \
@@ -98,6 +99,7 @@ LOCAL_SRC_FILES := ../../../src/main.cpp \
 ../../../src/client/renderer/Textures.cpp \
 ../../../src/client/renderer/TileRenderer.cpp \
 ../../../src/client/renderer/gles.cpp \
+../../../src/client/renderer/RenderBackend.cpp \
 ../../../src/client/renderer/culling/Frustum.cpp \
 ../../../src/client/renderer/entity/ArrowRenderer.cpp \
 ../../../src/client/renderer/entity/ChickenRenderer.cpp \
