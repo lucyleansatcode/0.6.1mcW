@@ -1,4 +1,5 @@
 #include "RandomLevelSource.h"
+#include "../../../util/MemoryBudget.h"
 
 #include "feature/FeatureInclude.h"
 #include "../Level.h"
@@ -495,7 +496,11 @@ LevelChunk* RandomLevelSource::getChunk(int xOffs, int zOffs) {
 
     random.setSeed((long)(xOffs * 341872712l + zOffs * 132899541l)); //@fix
 
+    if (!MemoryBudget::hasBudget(MemoryBudget::SUBSYS_CHUNK_MESH, LevelChunk::ChunkBlockCount)) {
+        LOGI("[chunk] world chunk allocation over budget for (%d,%d), continuing after warning\n", xOffs, zOffs);
+    }
     unsigned char* blocks = new unsigned char[LevelChunk::ChunkBlockCount];
+    MemoryBudget::add(MemoryBudget::SUBSYS_CHUNK_MESH, LevelChunk::ChunkBlockCount);
     LevelChunk* levelChunk = new LevelChunk(level, blocks, xOffs, zOffs);
 	chunkMap.insert(std::make_pair(hashedPos, levelChunk));
 
@@ -687,6 +692,7 @@ Biome::MobList RandomLevelSource::getMobsAt(const MobCategory& mobCategory, int 
 LevelChunk* PerformanceTestChunkSource::create(int x, int z)
 {
 	unsigned char* blocks = new unsigned char[LevelChunk::ChunkBlockCount];
+	MemoryBudget::add(MemoryBudget::SUBSYS_CHUNK_MESH, LevelChunk::ChunkBlockCount);
 	memset(blocks, 0, LevelChunk::ChunkBlockCount);
 
 	for (int y = 0; y < 65; y++)

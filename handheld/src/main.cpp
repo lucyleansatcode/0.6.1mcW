@@ -40,5 +40,9 @@
 
 
 #ifdef WII
+implement-wii-filesystem-initialization-and-checks
     #include "main_wii.h"
+=======
+    #include "main_wii.cpp"
+main
 #endif

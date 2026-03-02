@@ -269,6 +269,9 @@
     <ClCompile Include="..\..\src\client\renderer\gles.cpp">
       <Filter>Source Files\client\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\client\renderer\RenderBackend.cpp">
+      <Filter>Source Files\client\renderer</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\world\level\TickNextTickData.cpp">
       <Filter>Source Files\world\level</Filter>
     </ClCompile>

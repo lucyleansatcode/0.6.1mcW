@@ -1124,7 +1124,7 @@ void Minecraft::releaseMouse()
 }
 
 bool Minecraft::useTouchscreen() {
-#ifdef RPI
+#if defined(RPI) || defined(GEKKO)
 	return false;
 #endif
 	return options.useTouchScreen || !_supportsNonTouchscreen;
@@ -1247,7 +1247,7 @@ void Minecraft::_reloadInput() {
 	if (useTouchscreen()) {
 		inputHolder = new TouchInputHolder(this, &options);
 	} else {
-		#if defined(ANDROID) || defined(__APPLE__) 
+		#if defined(ANDROID) || defined(__APPLE__) || defined(GEKKO)
 			inputHolder = new CustomInputHolder(
 				new XperiaPlayInput(&options),
 				new ControllerTurnInput(2, ControllerTurnInput::MODE_DELTA),

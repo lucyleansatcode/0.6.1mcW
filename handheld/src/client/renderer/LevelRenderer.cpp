@@ -23,6 +23,7 @@
 #include "Textures.h"
 #include "tileentity/TileEntityRenderDispatcher.h"
 #include "../particle/BreakingItemParticle.h"
+#include "../../util/MemoryBudget.h"
 
 #include "../../client/player/LocalPlayer.h"
 
@@ -175,6 +176,7 @@ void LevelRenderer::allChanged()
 
 	chunks = new Chunk*[chunksLength];
 	sortedChunks = new Chunk*[chunksLength];
+	MemoryBudget::add(MemoryBudget::SUBSYS_CHUNK_MESH, 2 * chunksLength * (int)sizeof(Chunk*));
 
 	int id = 0;
 	int count = 0;
@@ -228,8 +230,9 @@ void LevelRenderer::deleteChunks()
 	for (int z = 0; z < zChunks; ++z)
 	for (int y = 0; y < yChunks; ++y)
 	for (int x = 0; x < xChunks; ++x) {
-		int c = getLinearCoord(x, y, z);
-		delete chunks[c];
+	int c = getLinearCoord(x, y, z);
+	if (chunks[c] != NULL) chunks[c]->evictMesh();
+	delete chunks[c];
 	}
 
 	delete[] chunks;
@@ -237,6 +240,7 @@ void LevelRenderer::deleteChunks()
 
 	delete[] sortedChunks;
 	sortedChunks = NULL;
+	MemoryBudget::add(MemoryBudget::SUBSYS_CHUNK_MESH, -2 * chunksLength * (int)sizeof(Chunk*));
 }
 
 void LevelRenderer::resortChunks( int xc, int yc, int zc )
@@ -593,6 +597,30 @@ void LevelRenderer::tick()
 
 bool LevelRenderer::updateDirtyChunks( Mob* player, bool force )
 {
+	const int kEvictDistanceSqr = 110 * 110;
+	const int kKeepCompiledNearPlayer = 180;
+	int compiledCount = 0;
+	for (int i = 0; i < chunksLength; ++i) {
+		Chunk* c = chunks[i];
+		if (c != NULL && !c->isDirty() && !c->isEmpty()) {
+			compiledCount++;
+			if (c->distanceToSqr(player) > kEvictDistanceSqr) {
+				c->evictMesh();
+			}
+		}
+	}
+
+	if (compiledCount > kKeepCompiledNearPlayer) {
+		int evicted = 0;
+		for (int i = chunksLength - 1; i >= 0 && compiledCount - evicted > kKeepCompiledNearPlayer; --i) {
+			Chunk* c = sortedChunks[i];
+			if (c != NULL && !c->isDirty() && !c->isEmpty()) {
+				c->evictMesh();
+				evicted++;
+			}
+		}
+	}
+
 	bool slow = false;
 
 	if (slow) {
@@ -625,7 +653,7 @@ bool LevelRenderer::updateDirtyChunks( Mob* player, bool force )
 
 		DirtyChunkSorter dirtyChunkSorter(player);
 		Chunk* toAdd[count] = {NULL};
-		std::vector<Chunk*>* nearChunks = NULL;
+		std::vector<Chunk*> nearChunks;
 
 		int pendingChunkSize = dirtyChunks.size();
 		int pendingChunkRemoved = 0;
@@ -662,12 +690,8 @@ bool LevelRenderer::updateDirtyChunks( Mob* player, bool force )
 
 			// chunk is very close -- always render
 
-			if (nearChunks == NULL) {
-				nearChunks = new std::vector<Chunk*>();
-			}
-
 			pendingChunkRemoved++;
-			nearChunks->push_back(chunk);
+			nearChunks.push_back(chunk);
 			dirtyChunks[i] = NULL;
 		}
 
@@ -677,17 +701,16 @@ bool LevelRenderer::updateDirtyChunks( Mob* player, bool force )
 		Stopwatch chunkWatch;
 		chunkWatch.start();
 
-		if (nearChunks != NULL) {
-			if (nearChunks->size() > 1) {
-				std::sort(nearChunks->begin(), nearChunks->end(), dirtyChunkSorter);
+		if (!nearChunks.empty()) {
+			if (nearChunks.size() > 1) {
+				std::sort(nearChunks.begin(), nearChunks.end(), dirtyChunkSorter);
 			}
 
-			for (int i = nearChunks->size() - 1; i >= 0; i--) {
-				Chunk* chunk = (*nearChunks)[i];
+			for (int i = (int)nearChunks.size() - 1; i >= 0; i--) {
+				Chunk* chunk = nearChunks[i];
 				chunk->rebuild();
 				chunk->setClean();
 			}
-			delete nearChunks;
 		}
 
 		// render the nearest <count> chunks (farther than 1024 units away)
@@ -883,6 +906,7 @@ void LevelRenderer::setTilesDirty( int x0, int y0, int z0, int x1, int y1, int z
 
 void LevelRenderer::cull( Culler* culler, float a )
 {
+	TIMER_PUSH("visibility.cull");
 	for (int i = 0; i < chunksLength; i++) {
 		if (!chunks[i]->isEmpty()) {
 			if (!chunks[i]->visible || ((i + cullStep) & 15) == 0) {
@@ -891,6 +915,7 @@ void LevelRenderer::cull( Culler* culler, float a )
 		}
 	}
 	cullStep++;
+	TIMER_POP();
 }
 
 void LevelRenderer::skyColorChanged()
@@ -935,7 +960,8 @@ void LevelRenderer::renderEntities(Vec3 cam, Culler* culler, float a) {
 	const EntityList& entities = level->getAllEntities();
 	totalEntities = entities.size();
 	if (totalEntities > 0) {
-		Entity** toRender = new Entity*[totalEntities];
+		_entityRenderBuffer.clear();
+		_entityRenderBuffer.reserve(totalEntities);
 		for (int i = 0; i < totalEntities; i++) {
 			Entity* entity = entities[i];
 
@@ -947,20 +973,19 @@ void LevelRenderer::renderEntities(Vec3 cam, Culler* culler, float a) {
 				if (!level->hasChunkAt(Mth::floor(entity->x), Mth::floor(entity->y), Mth::floor(entity->z)))
 					continue;
 
-				toRender[renderedEntities++] = entity;
+				_entityRenderBuffer.push_back(entity);
+				renderedEntities++;
 				//EntityRenderDispatcher::getInstance()->render(entity, a);
 			}
 		}
 
 		if (renderedEntities > 0) {
-			std::sort(&toRender[0], &toRender[renderedEntities], entityRenderPredicate);
+			std::sort(_entityRenderBuffer.begin(), _entityRenderBuffer.end(), entityRenderPredicate);
+			EntityRenderDispatcher* disp = EntityRenderDispatcher::getInstance();
 			for (int i = 0; i < renderedEntities; ++i) {
-				EntityRenderDispatcher* disp = EntityRenderDispatcher::getInstance();
-				disp->render(toRender[i], a);
+				disp->render(_entityRenderBuffer[i], a);
 			}
 		}
-
-		delete[] toRender;
 	}
 
     TIMER_POP_PUSH("tileentities");
