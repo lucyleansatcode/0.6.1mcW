@@ -7,6 +7,7 @@
 #include "../../world/level/Region.h"
 #include "../../world/level/chunk/LevelChunk.h"
 #include "../../util/Mth.h"
+#include "../../util/MemoryBudget.h"
 //#include "../../platform/time.h"
 
 /*static*/ int Chunk::updates = 0;
@@ -26,7 +27,8 @@ Chunk::Chunk( Level* level_, int x, int y, int z, int size, int lists_, GLuint* 
 	lists(lists_),
 	vboBuffers(ptrBuf),
 	bb(0,0,0,1,1,1),
-	t(Tesselator::instance)
+	t(Tesselator::instance),
+	meshBytes(0)
 {
 	for (int l = 0; l < NumLayers; l++) {
 		empty[l] = false;
@@ -88,7 +90,12 @@ void Chunk::rebuild()
 	int x1 = x + xs;
 	int y1 = y + ys;
 	int z1 = z + zs;
+	const int oldMeshBytes = meshBytes;
 	for (int l = 0; l < NumLayers; l++) {
+		if (renderChunk[l].vertexCount > 0) {
+			meshBytes -= renderChunk[l].vertexCount * VertexSizeBytes;
+			renderChunk[l].vertexCount = 0;
+		}
 		empty[l] = true;
 	}
     _empty = true;
@@ -161,6 +168,7 @@ void Chunk::rebuild()
 			renderChunk[l].pos.x = (float)this->x;
 			renderChunk[l].pos.y = (float)this->y;
 			renderChunk[l].pos.z = (float)this->z;
+			meshBytes += renderChunk[l].vertexCount * VertexSizeBytes;
 #else
 			t.end(false, -1);
 			glPopMatrix2();
@@ -181,7 +189,27 @@ void Chunk::rebuild()
     //sw.printEvery(1, "rebuild-");
 	skyLit = LevelChunk::touchedSky;
 	compiled = true;
+	MemoryBudget::add(MemoryBudget::SUBSYS_CHUNK_MESH, meshBytes - oldMeshBytes);
 	return;
+}
+
+void Chunk::evictMesh()
+{
+	if (meshBytes > 0)
+		MemoryBudget::add(MemoryBudget::SUBSYS_CHUNK_MESH, -meshBytes);
+	meshBytes = 0;
+
+#ifdef USE_VBO
+	for (int l = 0; l < NumLayers; ++l) {
+		renderChunk[l].vertexCount = 0;
+		if (vboBuffers != NULL) {
+			glBindBuffer2(GL_ARRAY_BUFFER, vboBuffers[l]);
+			glBufferData2(GL_ARRAY_BUFFER, 0, NULL, GL_STATIC_DRAW);
+		}
+	}
+#endif
+	reset();
+	setDirty();
 }
 
 float Chunk::distanceToSqr( const Entity* player ) const
@@ -204,6 +232,7 @@ void Chunk::reset()
 {
 	for (int i = 0; i < NumLayers; i++) {
 		empty[i] = true;
+		renderChunk[i].vertexCount = 0;
 	}
 	visible = false;
 	compiled = false;
