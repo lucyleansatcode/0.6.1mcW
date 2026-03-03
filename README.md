@@ -1,5 +1,5 @@
-## MCPE 0.6.1 leaked
-This is part of the source code previously leaked on 4chan, which includes the developer build of Minecraft PE 0.6.1.
+## MCPE 0.6.1 RVL port.
+Based on source code previously leaked on 4chan, which includes the developer build of Minecraft PE 0.6.1.
 
 ## Current platform direction
 - Playable target: **Wii only**.
