@@ -3,7 +3,7 @@
 #include <unordered_map>
 
 #if !defined(WII) && !defined(__WII__)
-#include "gles.h"
+#include "renderer_gx.h"
 #endif
 
 #if defined(__WII__)
