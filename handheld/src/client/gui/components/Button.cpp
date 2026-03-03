@@ -35,7 +35,6 @@ void Button::render( Minecraft* minecraft, int xm, int ym )
 
 	/*
 	minecraft->textures->loadAndBindTexture("gui/gui.png");
-	glColor4f2(1, 1, 1, 1);
 
 	//printf("ButtonId: %d - Hovered? %d (cause: %d, %d, %d, %d, <> %d, %d)\n", id, hovered, x, y, x+w, y+h, xm, ym);
 	int yImage = getYImage(hovered || selected);
@@ -85,7 +84,6 @@ void Button::renderFace(Minecraft* mc, int xm, int ym) {
 void Button::renderBg( Minecraft* minecraft, int xm, int ym )
 {
 	minecraft->textures->loadAndBindTexture("gui/gui.png");
-	glColor4f2(1, 1, 1, 1);
 
 	//printf("ButtonId: %d - Hovered? %d (cause: %d, %d, %d, %d, <> %d, %d)\n", id, hovered, x, y, x+w, y+h, xm, ym);
 	int yImage = getYImage(selected || hovered(minecraft, xm, ym));;
@@ -148,11 +146,6 @@ void TButton::renderBg( Minecraft* minecraft, int xm, int ym )
 	minecraft->textures->loadAndBindTexture("gui/touchgui.png");
 
 	//printf("ButtonId: %d - Hovered? %d (cause: %d, %d, %d, %d, <> %d, %d)\n", id, hovered, x, y, x+w, y+h, xm, ym);
-	if (active)
-		glColor4f2(1, 1, 1, 1);
-	else
-		glColor4f2(0.5f, 0.5f, 0.5f, 1);
-
 	blit(x, y, hovered?66:0, 0, width, height, 66, 26);
 	//blit(x + w / 2, y, 200 - w / 2, 46 + yImage * 20, w / 2, h, 0, 20);
 }
@@ -201,7 +194,6 @@ void THeader::renderBg( Minecraft* minecraft, int xm, int ym )
 	minecraft->textures->loadAndBindTexture("gui/touchgui.png");
 
 	//printf("ButtonId: %d - Hovered? %d (cause: %d, %d, %d, %d, <> %d, %d)\n", id, hovered, x, y, x+w, y+h, xm, ym);
-	glColor4f2(1, 1, 1, 1);
 
 	// Left cap
 	blit(x, y, 150, 26, 2, height-1, 2, 25);
@@ -210,8 +202,6 @@ void THeader::renderBg( Minecraft* minecraft, int xm, int ym )
 	// Right cap
 	blit(x+width-2, y, 162, 26, 2, height-1, 2, 25);
 	// Shadow
-	glEnable2(GL_BLEND);
-	glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	blit(x, y+height-1, 153, 52, width, 3, 8, 3);
 }
 
