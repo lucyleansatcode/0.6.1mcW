@@ -1,7 +1,9 @@
 # Wii (devkitPPC + libogc) target bootstrap.
 # Usage: make -C handheld/project/wii
 
-DEVKITPRO ?= /opt/devkitpro
+# Windows Git Bash / MSYS2 default location for devkitPro.
+# Override via environment when installed elsewhere.
+DEVKITPRO ?= /c/devkitPro
 DEVKITPPC ?= $(DEVKITPRO)/devkitPPC
 WII_RULES := $(DEVKITPPC)/wii_rules
 
@@ -9,7 +11,7 @@ ifeq (,$(wildcard $(WII_RULES)))
 all:
 	@echo "devkitPPC toolchain not found."
 	@echo "Set DEVKITPRO/DEVKITPPC before building, for example:"
-	@echo "  export DEVKITPRO=/opt/devkitpro"
+	@echo "  export DEVKITPRO=/c/devkitPro"
 	@echo "  export DEVKITPPC=\$$DEVKITPRO/devkitPPC"
 	@echo "Then rerun: make -C handheld/project/wii"
 
