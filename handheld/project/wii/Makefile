@@ -22,44 +22,43 @@ else
 
 include $(WII_RULES)
 
-TARGET      := minecraftwii
+TARGET      := boot
 BUILD       := build
 SOURCES_DIR := ../../src
 INCLUDES    := -I$(SOURCES_DIR) -I../../lib/include -I$(LIBOGC_INC)
 
-CORE_SOURCES := $(shell find $(SOURCES_DIR) -name '*.cpp' \
-	! -name 'AppPlatform_*' \
-	! -name 'main_*' \
-	! -name '*_win32.cpp' \
-	! -path '*/client/renderer/gles.cpp' \
-	! -path '*/util/PerfRenderer.cpp')
+# Wii build intentionally compiles only GX backend sources and excludes GL backends.
+EXCLUDED_SOURCES := \
+	$(SOURCES_DIR)/client/renderer/gles.cpp \
+	$(SOURCES_DIR)/client/renderer/renderer_gl.cpp
 
-PLATFORM_SOURCES := \
-	$(SOURCES_DIR)/AppPlatform_wii.cpp \
+SOURCES := \
 	$(SOURCES_DIR)/main_wii.cpp \
 	$(SOURCES_DIR)/client/renderer/RenderBackend.cpp \
 	$(SOURCES_DIR)/client/renderer/renderer_gx.cpp
 
-SOURCES := $(sort $(CORE_SOURCES) $(PLATFORM_SOURCES))
-
-CXXFLAGS += -DWII -DPOSIX -DGFX_SMALLER_CHUNKS -fno-exceptions -fno-rtti $(INCLUDES)
+CXXFLAGS += -DWII -D__WII__ -DPOSIX -fno-exceptions -fno-rtti $(INCLUDES)
 LDFLAGS  += -L$(LIBOGC_LIB)
 LIBS     := -logc -lbte -lm -lz -lfat
 
 OBJECTS := $(patsubst $(SOURCES_DIR)/%.cpp,$(BUILD)/%.o,$(SOURCES))
 
-all: $(TARGET).elf
+all: $(TARGET).dol
 
 $(TARGET).elf: $(OBJECTS)
 	@echo linking $@
-	$(CXX) $(OBJECTS) -o $@ $(LDFLAGS) $(LIBS)
+	$(LD) $(OBJECTS) -o $@ $(LDFLAGS) $(LIBS)
+
+$(TARGET).dol: $(TARGET).elf
+	@echo converting $< to $@
+	elf2dol $< $@
 
 $(BUILD)/%.o: $(SOURCES_DIR)/%.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -rf $(BUILD) $(TARGET).elf
+	rm -rf $(BUILD) $(TARGET).elf $(TARGET).dol
 
 .PHONY: all clean
 
