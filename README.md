@@ -22,6 +22,12 @@ The Wii build is driven by `handheld/project/wii/Makefile`, not Visual Studio CM
    ```
 
    `handheld/project/wii/Makefile` expects `DEVKITPPC` and includes `$(DEVKITPPC)/wii_rules`.
+   For Windows Git Bash (MINGW64) with a default devkitPro install, use:
+
+   ```sh
+   export DEVKITPRO=/c/devkitPro
+   export DEVKITPPC=$DEVKITPRO/devkitPPC
+   ```
 3. Build from that shell with:
 
    ```sh
