@@ -31,7 +31,7 @@ SOURCES_DIR := ../../src
 # Wii is GX-only; do not pull OpenGL ES headers/libraries into this target.
 INCLUDES    := -I$(SOURCES_DIR) -I$(LIBOGC_INC)
 
-CXXFLAGS += -DWII -D__WII__ -DRENDER_BACKEND_GX -DPOSIX -fno-exceptions -fno-rtti $(INCLUDES)
+CXXFLAGS += -DWII -D__WII__ -DGEKKO -DHW_RVL -DRENDER_BACKEND_GX -DPOSIX -fno-exceptions -fno-rtti $(INCLUDES)
 LDFLAGS  += -L$(LIBOGC_LIB)
 LIBS     := -logc -lbte -lm -lz -lfat
 
