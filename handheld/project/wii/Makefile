@@ -1,8 +1,6 @@
 # Wii (devkitPPC + libogc) target bootstrap.
 # Usage: make -C handheld/project/wii
 
-# Windows Git Bash / MSYS2 default location for devkitPro.
-# Override via environment when installed elsewhere.
 DEVKITPRO ?= /c/devkitPro
 DEVKITPPC ?= $(DEVKITPRO)/devkitPPC
 WII_RULES := $(DEVKITPPC)/wii_rules
@@ -29,40 +27,20 @@ BUILD       := build
 SOURCES_DIR := ../../src
 INCLUDES    := -I$(SOURCES_DIR) -I../../lib/include -I$(LIBOGC_INC)
 
-# Wii source selection uses an allowlist:
-#   1) platform-independent engine sources
-#   2) explicit Wii platform and entry files
-# This prevents Windows/OpenGL translation units from being compiled.
-CORE_DIRS := \
-	client \
-	locale \
-	nbt \
-	network \
-	platform \
-	raknet \
-	server \
-	util \
-	world
+CORE_SOURCES := $(shell find $(SOURCES_DIR) -name '*.cpp' \
+	! -name 'AppPlatform_*' \
+	! -name 'main_*' \
+	! -name '*_win32.cpp' \
+	! -path '*/client/renderer/gles.cpp' \
+	! -path '*/util/PerfRenderer.cpp')
 
-CORE_TOPLEVEL_SRCS := \
-	$(SOURCES_DIR)/NinecraftApp.cpp \
-	$(SOURCES_DIR)/Performance.cpp \
-	$(SOURCES_DIR)/SharedConstants.cpp
-
-CORE_TREE_SRCS := $(foreach dir,$(CORE_DIRS),$(shell find $(SOURCES_DIR)/$(dir) -name '*.cpp'))
-CORE_SRCS := $(sort $(CORE_TOPLEVEL_SRCS) $(CORE_TREE_SRCS))
-
-# Exclude OpenGL backend units from the Wii target.
-CORE_SRCS := $(filter-out \
-	$(SOURCES_DIR)/client/renderer/gles.cpp \
-	$(SOURCES_DIR)/util/PerfRenderer.cpp,\
-	$(CORE_SRCS))
-
-WII_SRCS := \
+PLATFORM_SOURCES := \
 	$(SOURCES_DIR)/AppPlatform_wii.cpp \
-	$(SOURCES_DIR)/main_wii.cpp
+	$(SOURCES_DIR)/main_wii.cpp \
+	$(SOURCES_DIR)/client/renderer/RenderBackend.cpp \
+	$(SOURCES_DIR)/client/renderer/renderer_gx.cpp
 
-SOURCES := $(CORE_SRCS) $(WII_SRCS)
+SOURCES := $(sort $(CORE_SOURCES) $(PLATFORM_SOURCES))
 
 CXXFLAGS += -DWII -DPOSIX -DGFX_SMALLER_CHUNKS -fno-exceptions -fno-rtti $(INCLUDES)
 LDFLAGS  += -L$(LIBOGC_LIB)

@@ -22,7 +22,7 @@
 #endif
 #include "client/player/LocalPlayer.h"
 #ifndef STANDALONE_SERVER
-#include "client/renderer/gles.h"
+#include "client/renderer/RenderBackend.h"
 #include "client/renderer/Chunk.h"
 #include "client/renderer/LevelRenderer.h"
 #include "client/renderer/Tesselator.h"
@@ -233,16 +233,6 @@ void NinecraftApp::updateStats()
 
 		lastTime = now;
 		_frames = 0;
-#ifdef GLDEBUG
-		while (1) {
-			int error = glGetError();
-			if (error == GL_NO_ERROR) break;
-
-			LOGI("#################### GL-ERROR: %d\t#####################\n", error);
-			LOGI("#################### GL-ERROR: %d\t#####################\n", error);
-			LOGI("#################### GL-ERROR: %d\t#####################\n", error);
-		}
-#endif
 	}
 	Textures::textureChanges = 0;
 	/**/
@@ -254,16 +244,9 @@ void NinecraftApp::initGLStates()
 #ifndef STANDALONE_SERVER
 	//glShadeModel2(GL_SMOOTH);
 	//glClearDepthf(1.0f);
-	glEnable2(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
-	glDepthRangef(0, 1);
-	glEnable2(GL_ALPHA_TEST);
-	glAlphaFunc(GL_GREATER, 0.1f);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+	RenderBackend::setDepthState(true, true);
+	RenderBackend::setCullState(true);
 
-	glEnable2(GL_TEXTURE_2D);
-	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
 
 	// Both updates isPowerVR flag in java and returns if the graphics chip is PowerVR SGX or not
 	_powerVr = platform()->isPowerVR();

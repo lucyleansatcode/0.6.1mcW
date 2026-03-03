@@ -6,7 +6,7 @@
 #include <string>
 #include <cctype>
 
-#include "../renderer/gles.h"
+#include "../renderer/RenderBackend.h"
 
 class Textures;
 class Options;
@@ -37,7 +37,7 @@ private:
 	void drawSlow(const std::string& str, float x, float y, int color, bool darken = false);
 	void drawSlow(const char* str, float x, float y, int color, bool darken = false);
 public:
-	int fontTexture;
+	RenderBackend::TextureId fontTexture;
 	int lineHeight;
 	static const int DefaultLineHeight = 10;
 private:
@@ -47,7 +47,7 @@ private:
 
 	int index;
 	int count;
-	GLuint lists[1024];
+	RenderBackend::TextureId lists[1024];
 
 	std::string fontName;
 	Textures* _textures;

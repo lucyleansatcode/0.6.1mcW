@@ -1,10 +1,33 @@
 #include "RenderBackend.h"
 
+#include <unordered_map>
+
 #if defined(__WII__)
 #include <gccore.h>
+#include <vector>
 #endif
 
 namespace RenderBackend {
+
+#if defined(__WII__)
+namespace {
+TextureId s_nextTextureId = 1;
+TextureId s_boundTexture = 0;
+}
+
+namespace WiiRenderer {
+void registerTexture(TextureId id);
+void deleteTexture(TextureId id);
+void bindTexture(TextureId id);
+void configureTextureSampling(TextureId id, bool useMipMap, bool blur, bool clamp);
+void uploadTexture2D(TextureId id, const TextureData& img);
+}
+#else
+namespace {
+std::unordered_map<TextureId, unsigned int> s_glTextures;
+TextureId s_nextTextureId = 1;
+}
+#endif
 
 void init() {
 #if defined(__WII__)
@@ -39,11 +62,7 @@ void setOrtho(float left, float right, float bottom, float top, float zNear, flo
 
 void configureTextureSampling(bool useMipMap, bool blur, bool clamp) {
 #if defined(__WII__)
-    const u8 minFilter = blur ? GX_LINEAR : (useMipMap ? GX_LIN_MIP_LIN : GX_NEAR);
-    const u8 magFilter = blur ? GX_LINEAR : GX_NEAR;
-    const u8 wrapMode = clamp ? GX_CLAMP : GX_REPEAT;
-    GX_InitTexObjFilterMode(nullptr, minFilter, magFilter);
-    GX_InitTexObjWrapMode(nullptr, wrapMode, wrapMode);
+    WiiRenderer::configureTextureSampling(s_boundTexture, useMipMap, blur, clamp);
 #else
     glTexParameteri2(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, blur ? GL_LINEAR : (useMipMap ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST));
     glTexParameteri2(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, blur ? GL_LINEAR : GL_NEAREST);
@@ -52,12 +71,59 @@ void configureTextureSampling(bool useMipMap, bool blur, bool clamp) {
 #endif
 }
 
+TextureId genTexture() {
+#if defined(__WII__)
+    const TextureId id = s_nextTextureId++;
+    WiiRenderer::registerTexture(id);
+    return id;
+#else
+    unsigned int glId = 0;
+    glGenTextures(1, &glId);
+    const TextureId id = s_nextTextureId++;
+    s_glTextures[id] = glId;
+    return id;
+#endif
+}
+
+void deleteTexture(TextureId id) {
+#if defined(__WII__)
+    WiiRenderer::deleteTexture(id);
+    if (s_boundTexture == id) {
+        s_boundTexture = 0;
+    }
+#else
+    std::unordered_map<TextureId, unsigned int>::iterator it = s_glTextures.find(id);
+    if (it == s_glTextures.end()) {
+        return;
+    }
+
+    unsigned int glId = it->second;
+    glDeleteTextures(1, &glId);
+    s_glTextures.erase(it);
+#endif
+}
+
+void bindTexture(TextureId id) {
+#if defined(__WII__)
+    s_boundTexture = id;
+    WiiRenderer::bindTexture(id);
+#else
+    std::unordered_map<TextureId, unsigned int>::iterator it = s_glTextures.find(id);
+    const unsigned int glId = it == s_glTextures.end() ? 0 : it->second;
+    glBindTexture2(GL_TEXTURE_2D, glId);
+#endif
+}
+
+TextureId createTextureFromData(const TextureData& img) {
+    const TextureId id = genTexture();
+    bindTexture(id);
+    uploadTexture2D(img);
+    return id;
+}
+
 void uploadTexture2D(const TextureData& img) {
 #if defined(__WII__)
-    const GXTexFmt fmt = img.transparent ? GX_TF_RGBA8 : GX_TF_RGB565;
-    GXTexObj texObj;
-    GX_InitTexObj(&texObj, img.data, img.w, img.h, fmt, GX_REPEAT, GX_REPEAT, GX_FALSE);
-    GX_LoadTexObj(&texObj, GX_TEXMAP0);
+    WiiRenderer::uploadTexture2D(s_boundTexture, img);
 #else
     const GLint mode = img.transparent ? GL_RGBA : GL_RGB;
     if (img.format == TEXF_UNCOMPRESSED_565)
