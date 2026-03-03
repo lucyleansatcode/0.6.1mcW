@@ -34,7 +34,7 @@ void Textures::clear()
 {
 	for (TextureMap::iterator it = idMap.begin(); it != idMap.end(); ++it) {
 		if (it->second != Textures::InvalidId)
-			glDeleteTextures(1, &it->second);
+			RenderBackend::deleteTexture(it->second);
 	}
 	for (TextureImageMap::iterator it = loadedImages.begin(); it != loadedImages.end(); ++it) {
 		MemoryBudget::add(MemoryBudget::SUBSYS_TEXTURES, -estimateBytes(it->second));
@@ -88,7 +88,7 @@ TextureId Textures::assignTexture( const std::string& resourceName, const Textur
 	const TextureData& src = managed.data ? managed : img;
 
 	TextureId id;
-	glGenTextures(1, &id);
+	id = RenderBackend::genTexture();
 
 	bind(id);
 
@@ -213,8 +213,13 @@ void Textures::tick(bool uploadToGraphicsCard)
             tex->bindTexture(this);
 		    for (int xx = 0; xx < tex->replicate; xx++)
 		    for (int yy = 0; yy < tex->replicate; yy++) {
+#if defined(__WII__)
+			    RenderBackend::updateTexture2D(tex->tex % 16 * 16 + xx * 16,
+				    tex->tex / 16 * 16 + yy * 16, 16, 16, tex->pixels, 0, 0);
+#else
 			    RenderBackend::updateTexture2D(tex->tex % 16 * 16 + xx * 16,
 				    tex->tex / 16 * 16 + yy * 16, 16, 16, tex->pixels, GL_RGBA, GL_UNSIGNED_BYTE);
+#endif
 		    }
         }
 	}

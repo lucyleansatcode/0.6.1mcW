@@ -1,0 +1,32 @@
+# Wii build workflow
+
+## Prerequisites
+- devkitPro + devkitPPC + libogc installed (Windows Git Bash path defaults to `/c/devkitPro`).
+- Project root checked out with subfolders intact.
+
+## Build
+```bash
+make -C handheld/project/wii
+```
+
+Output artifact:
+- `handheld/project/wii/minecraftwii.elf`
+
+## Test in Dolphin
+1. Open Dolphin.
+2. Launch `minecraftwii.elf` directly.
+
+## Test on Homebrew Launcher (SD card)
+1. Convert ELF to DOL if needed:
+   ```bash
+   elf2dol handheld/project/wii/minecraftwii.elf handheld/project/wii/minecraftwii.dol
+   ```
+2. Create app folder on SD card, for example:
+   - `sd:/apps/minecraftwii/boot.dol` (copy `minecraftwii.dol` to `boot.dol`)
+   - `sd:/apps/minecraftwii/meta.xml`
+   - `sd:/apps/minecraftwii/icon.png` (optional)
+3. Start Homebrew Channel and launch `minecraftwii`.
+
+## Notes
+- Wii target uses the RenderBackend + GX path and does **not** define `USE_OPENGL`.
+- Wii Makefile uses explicit platform sources plus filtered core sources to avoid desktop-only translation units.

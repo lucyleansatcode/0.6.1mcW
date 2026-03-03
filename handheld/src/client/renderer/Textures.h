@@ -6,14 +6,15 @@
 #include <string>
 #include <map>
 #include <utility>
-#include "gles.h"
+#include "../../platform/log.h"
+#include "RenderBackend.h"
 #include "TextureData.h"
 
 class DynamicTexture;
 class Options;
 class AppPlatform;
 
-typedef GLuint TextureId;
+typedef RenderBackend::TextureId TextureId;
 typedef std::map<std::string, TextureId> TextureMap;
 typedef std::map<TextureId, TextureData> TextureImageMap;
 
@@ -31,7 +32,7 @@ public:
 
 	__inline void bind(TextureId id) {
 		if (id != Textures::InvalidId && lastBoundTexture != id) {
-			glBindTexture2(GL_TEXTURE_2D, id);
+			RenderBackend::bindTexture(id);
 			lastBoundTexture = id;
 			++textureChanges;
 		} else if (id == Textures::InvalidId){
