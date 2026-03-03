@@ -35,3 +35,13 @@ The Wii build is driven by `handheld/project/wii/Makefile`, not Visual Studio CM
    ```
 
 If the toolchain path is missing, the Makefile prints guidance and exits without building.
+
+## Deploying to SD card for Homebrew Channel
+
+After a successful build, copy the generated executable and metadata into your SD app folder:
+
+```sh
+mkdir -p /path/to/sd/apps/minecraftwii && cp handheld/project/wii/{boot.dol,meta.xml} /path/to/sd/apps/minecraftwii/
+```
+
+This creates a Homebrew Channel-ready app directory containing `boot.dol` and `meta.xml`.

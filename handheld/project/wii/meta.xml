@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<app version="1">
+  <name>Minecraft Wii (MCPE 0.6.1 RVL)</name>
+  <coder>MCPE 0.6.1 RVL Contributors</coder>
+  <version>0.6.1-rvl</version>
+  <short_description>Minecraft PE 0.6.1 port for Nintendo Wii.</short_description>
+  <long_description>
+    Community-maintained Wii port of the Minecraft PE 0.6.1 codebase.
+    Built for Homebrew Channel using devkitPPC/libogc.
+  </long_description>
+</app>

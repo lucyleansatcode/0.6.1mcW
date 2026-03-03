@@ -23,9 +23,12 @@ Output artifact:
    elf2dol handheld/project/wii/boot.elf handheld/project/wii/boot.dol
    ```
 2. Create app folder on SD card, for example:
-   - `sd:/apps/minecraftwii/boot.dol` (copy `handheld/project/wii/boot.dol`)
+   ```bash
+   mkdir -p /path/to/sd/apps/minecraftwii && cp handheld/project/wii/{boot.dol,meta.xml} /path/to/sd/apps/minecraftwii/
+   ```
+   Resulting files:
+   - `sd:/apps/minecraftwii/boot.dol`
    - `sd:/apps/minecraftwii/meta.xml`
-   - `sd:/apps/minecraftwii/icon.png` (optional)
 3. Start Homebrew Channel and launch `minecraftwii`.
 
 ## Notes
