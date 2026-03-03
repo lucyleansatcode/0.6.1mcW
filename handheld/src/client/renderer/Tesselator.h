@@ -5,7 +5,7 @@
 
 #include <map>
 #include "RenderChunk.h"
-#include "gles.h"
+#include "render_compat.h"
 #include "VertecDecl.h"
 
 extern const int VertexSizeBytes;

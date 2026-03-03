@@ -5,7 +5,7 @@
 
 #include "MobRenderer.h"
 
-#include "../gles.h"
+#include "../render_compat.h"
 #include "../../model/SpiderModel.h"
 #include "../../../world/entity/monster/Spider.h"
 

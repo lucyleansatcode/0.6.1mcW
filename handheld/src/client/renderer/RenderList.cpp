@@ -1,6 +1,6 @@
 #include "RenderList.h"
 
-#include "gles.h"
+#include "render_compat.h"
 #include "RenderChunk.h"
 #include "Tesselator.h"
 

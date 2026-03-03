@@ -1,6 +1,6 @@
 #include "SheepRenderer.h"
 #include "../../../world/entity/animal/Sheep.h"
-#include "../gles.h"
+#include "../render_compat.h"
 
 SheepRenderer::SheepRenderer( Model* model, Model* armor, float shadow )
 :   super(model, shadow)

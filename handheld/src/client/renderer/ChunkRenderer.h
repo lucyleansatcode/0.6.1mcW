@@ -1,7 +1,7 @@
 #ifndef CHUNKRENDERER_H__
 #define CHUNKRENDERER_H__
 
-#include "gles.h"
+#include "render_compat.h"
 #include "../../world/level/Region.h"
 
 class ChunkRenderer {

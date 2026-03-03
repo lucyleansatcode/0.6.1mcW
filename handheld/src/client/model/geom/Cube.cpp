@@ -1,7 +1,7 @@
 #include "Cube.h"
 #include "ModelPart.h"
 #include "../../renderer/Tesselator.h"
-#include "../../renderer/gles.h"
+#include "../../renderer/render_compat.h"
 #include "../../../util/Mth.h"
 
 Cube::Cube(ModelPart* modelPart, int xTexOffs, int yTexOffs, float x0, float y0, float z0, int w, int h, int d, float g)

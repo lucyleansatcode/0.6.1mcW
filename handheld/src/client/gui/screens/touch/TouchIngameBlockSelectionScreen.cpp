@@ -6,7 +6,7 @@
 #include "../../../gamemode/GameMode.h"
 #include "../../../renderer/TileRenderer.h"
 #include "../../../player/LocalPlayer.h"
-#include "../../../renderer/gles.h"
+#include "../../../renderer/render_compat.h"
 #include "../../../renderer/entity/ItemRenderer.h"
 #include "../../../renderer/Tesselator.h"
 #include "../../../renderer/Textures.h"

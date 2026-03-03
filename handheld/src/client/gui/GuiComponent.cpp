@@ -1,7 +1,7 @@
 #include "GuiComponent.h"
 
 #include "../renderer/Tesselator.h"
-#include "../renderer/gles.h"
+#include "../renderer/render_compat.h"
 #include "Font.h"
 
 

@@ -1,6 +1,6 @@
 #include "ItemPane.h"
 #include "../Gui.h"
-#include "../../renderer/gles.h"
+#include "../../renderer/render_compat.h"
 #include "../../renderer/Tesselator.h"
 #include "NinePatch.h"
 #include "../../renderer/entity/ItemRenderer.h"

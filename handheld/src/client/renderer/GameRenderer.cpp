@@ -1,5 +1,5 @@
 #include "GameRenderer.h"
-#include "gles.h"
+#include "render_compat.h"
 
 #include "../../util/PerfTimer.h"
 

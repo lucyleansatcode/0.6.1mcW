@@ -28,9 +28,10 @@ include $(WII_RULES)
 TARGET      := boot
 BUILD       := build
 SOURCES_DIR := ../../src
-INCLUDES    := -I$(SOURCES_DIR) -I../../lib/include -I$(LIBOGC_INC)
+# Wii is GX-only; do not pull OpenGL ES headers/libraries into this target.
+INCLUDES    := -I$(SOURCES_DIR) -I$(LIBOGC_INC)
 
-CXXFLAGS += -DWII -D__WII__ -DPOSIX -fno-exceptions -fno-rtti $(INCLUDES)
+CXXFLAGS += -DWII -D__WII__ -DRENDER_BACKEND_GX -DPOSIX -fno-exceptions -fno-rtti $(INCLUDES)
 LDFLAGS  += -L$(LIBOGC_LIB)
 LIBS     := -logc -lbte -lm -lz -lfat
 
@@ -39,7 +40,7 @@ CORE_SOURCES := $(shell find $(SOURCES_DIR) -name '*.cpp' \
 	! -name 'AppPlatform_*.cpp' \
 	! -name 'main_*.cpp' \
 	! -name '*_win32.cpp' \
-	! -name 'gles.cpp' \
+	! -name 'render_compat.cpp' \
 	! -name 'renderer_gl.cpp' \
 )
 

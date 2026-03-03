@@ -1,6 +1,6 @@
 #include "ChestRenderer.h"
 #include "TileEntityRenderer.h"
-#include "../gles.h"
+#include "../render_compat.h"
 #include "../../model/ChestModel.h"
 #include "../../../world/level/tile/entity/ChestTileEntity.h"
 #include "../../../world/level/tile/ChestTile.h"

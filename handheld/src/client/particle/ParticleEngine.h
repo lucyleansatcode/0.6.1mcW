@@ -6,7 +6,7 @@
 #include <vector>
 #include "../../world/entity/Entity.h"
 #include "../../world/level/tile/Tile.h"
-#include "../renderer/gles.h"
+#include "../renderer/render_compat.h"
 
 class Textures;
 class Level;

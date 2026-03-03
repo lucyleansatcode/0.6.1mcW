@@ -1,7 +1,7 @@
 #include "IngameBlockSelectionScreen.h"
 #include "../../renderer/TileRenderer.h"
 #include "../../player/LocalPlayer.h"
-#include "../../renderer/gles.h"
+#include "../../renderer/render_compat.h"
 #include "../../Minecraft.h"
 #include "../../sound/SoundEngine.h"
 #include "../../../world/entity/player/Inventory.h"

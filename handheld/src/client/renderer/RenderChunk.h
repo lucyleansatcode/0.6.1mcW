@@ -3,7 +3,7 @@
 
 //package net.minecraft.client.renderer;
 
-#include "gles.h"
+#include "render_compat.h"
 #include "../../world/phys/Vec3.h"
 
 class RenderChunk

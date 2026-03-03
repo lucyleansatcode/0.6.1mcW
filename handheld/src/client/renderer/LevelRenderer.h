@@ -6,7 +6,7 @@
 #include "../../world/level/LevelListener.h"
 #include "../../world/phys/Vec3.h"
 #include "RenderList.h"
-#include "gles.h"
+#include "render_compat.h"
 #include <vector>
 
 class Minecraft;
