@@ -1,8 +1,13 @@
 #ifndef NET_MINECRAFT_CLIENT_RENDERER_RENDERBACKEND_H
 #define NET_MINECRAFT_CLIENT_RENDERER_RENDERBACKEND_H
 
-#include "gles.h"
 #include "TextureData.h"
+
+#if !defined(WII) && !defined(__WII__)
+#include "gles.h"
+#else
+static const unsigned int RB_TRIANGLES = 0x0004;
+#endif
 
 namespace RenderBackend {
 
@@ -19,7 +24,13 @@ void setDepthState(bool enabled, bool writeMask);
 void setCullState(bool enabled);
 void setBlendState(bool enabled, unsigned int srcFactor, unsigned int dstFactor);
 
-void submitTexturedMesh(int vertexCount, int vertexStride, unsigned int mode = GL_TRIANGLES);
+void submitTexturedMesh(int vertexCount, int vertexStride, unsigned int mode =
+#if defined(WII) || defined(__WII__)
+    RB_TRIANGLES
+#else
+    GL_TRIANGLES
+#endif
+);
 
 void bindArrayBuffer(unsigned int bufferId);
 void uploadArrayBuffer(const void* data, int bytes, bool dynamic);

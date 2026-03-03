@@ -27,15 +27,40 @@ BUILD       := build
 SOURCES_DIR := ../../src
 INCLUDES    := -I$(SOURCES_DIR) -I../../lib/include -I$(LIBOGC_INC)
 
-# Keep game logic unchanged; only platform/entry bindings are swapped per target.
-EXCLUDED_SRCS := \
-	$(SOURCES_DIR)/main_android.cpp \
-	$(SOURCES_DIR)/main_android_java.cpp \
-	$(SOURCES_DIR)/main_rpi.cpp \
-	$(SOURCES_DIR)/main_dedicated.cpp \
-	$(SOURCES_DIR)/AppPlatform_win32.cpp
+# Wii source selection uses an allowlist:
+#   1) platform-independent engine sources
+#   2) explicit Wii platform and entry files
+# This prevents Windows/OpenGL translation units from being compiled.
+CORE_DIRS := \
+	client \
+	locale \
+	nbt \
+	network \
+	platform \
+	raknet \
+	server \
+	util \
+	world
 
-SOURCES := $(filter-out $(EXCLUDED_SRCS),$(shell find $(SOURCES_DIR) -name '*.cpp'))
+CORE_TOPLEVEL_SRCS := \
+	$(SOURCES_DIR)/NinecraftApp.cpp \
+	$(SOURCES_DIR)/Performance.cpp \
+	$(SOURCES_DIR)/SharedConstants.cpp
+
+CORE_TREE_SRCS := $(foreach dir,$(CORE_DIRS),$(shell find $(SOURCES_DIR)/$(dir) -name '*.cpp'))
+CORE_SRCS := $(sort $(CORE_TOPLEVEL_SRCS) $(CORE_TREE_SRCS))
+
+# Exclude OpenGL backend units from the Wii target.
+CORE_SRCS := $(filter-out \
+	$(SOURCES_DIR)/client/renderer/gles.cpp \
+	$(SOURCES_DIR)/util/PerfRenderer.cpp,\
+	$(CORE_SRCS))
+
+WII_SRCS := \
+	$(SOURCES_DIR)/AppPlatform_wii.cpp \
+	$(SOURCES_DIR)/main_wii.cpp
+
+SOURCES := $(CORE_SRCS) $(WII_SRCS)
 
 CXXFLAGS += -DWII -DPOSIX -DGFX_SMALLER_CHUNKS -fno-exceptions -fno-rtti $(INCLUDES)
 LDFLAGS  += -L$(LIBOGC_LIB)

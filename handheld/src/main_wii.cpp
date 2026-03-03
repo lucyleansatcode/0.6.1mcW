@@ -1,6 +1,6 @@
 #include "App.h"
 #include "NinecraftApp.h"
-#include "AppPlatform.h"
+#include "AppPlatform_wii.h"
 #include "platform/time.h"
 
 #define MAIN_CLASS NinecraftApp
@@ -9,7 +9,7 @@ int main(int argc, char** argv)
 {
     AppContext appContext;
     appContext.doRender = false;
-    appContext.platform = new AppPlatform();
+    appContext.platform = new AppPlatform_wii();
 
     App* app = new MAIN_CLASS();
     app->init(appContext);
