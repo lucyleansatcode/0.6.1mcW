@@ -38,6 +38,7 @@ LIBS     := -logc -lbte -lm -lz -lfat
 # CORE_SOURCES: everything except platform entry points and desktop GL backends
 CORE_SOURCES := $(shell find $(SOURCES_DIR) -name '*.cpp' \
 	! -name 'AppPlatform_*.cpp' \
+	! -name 'main.cpp' \
 	! -name 'main_*.cpp' \
 	! -name '*_win32.cpp' \
 	! -name 'render_compat.cpp' \
@@ -47,7 +48,7 @@ CORE_SOURCES := $(shell find $(SOURCES_DIR) -name '*.cpp' \
 # Platform and backend files we explicitly want for Wii
 PLATFORM_SOURCES := \
 	$(SOURCES_DIR)/AppPlatform_wii.cpp \
-	$(SOURCES_DIR)/main_wii.cpp \
+	$(SOURCES_DIR)/main.cpp \
 	$(SOURCES_DIR)/client/renderer/RenderBackend.cpp \
 	$(SOURCES_DIR)/client/renderer/renderer_gx.cpp
 
