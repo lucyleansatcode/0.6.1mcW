@@ -8,13 +8,8 @@
 #include "../../world/level/chunk/LevelChunk.h"
 #include "../../util/Mth.h"
 
-profile-and-optimize-frame-time-hotspots
-
 #include "../../util/PerfTimer.h"
-=======
 #include "../../util/MemoryBudget.h"
-
-main
 //#include "../../platform/time.h"
 
 /*static*/ int Chunk::updates = 0;
@@ -198,11 +193,8 @@ void Chunk::rebuild()
 	skyLit = LevelChunk::touchedSky;
 	compiled = true;
   
-profile-and-optimize-frame-time-hotspots
-	TIMER_POP();
-=======
 	MemoryBudget::add(MemoryBudget::SUBSYS_CHUNK_MESH, meshBytes - oldMeshBytes);
-  main
+	TIMER_POP();
 	return;
 }
 

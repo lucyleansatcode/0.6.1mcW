@@ -108,24 +108,7 @@ TextureId Textures::assignTexture( const std::string& resourceName, const Textur
         }
 
         default:
-set-hard-budgets-for-system-ram
-            const GLint mode = src.transparent? GL_RGBA : GL_RGB;
-
-            if (src.format == TEXF_UNCOMPRESSED_565) {
-                glTexImage2D2(GL_TEXTURE_2D, 0, mode, src.w, src.h, 0, mode, GL_UNSIGNED_SHORT_5_6_5, src.data);
-            }
-            else if (src.format == TEXF_UNCOMPRESSED_4444) {
-                glTexImage2D2(GL_TEXTURE_2D, 0, mode, src.w, src.h, 0, mode, GL_UNSIGNED_SHORT_4_4_4_4, src.data);
-            }
-            else if (src.format == TEXF_UNCOMPRESSED_5551) {
-                glTexImage2D2(GL_TEXTURE_2D, 0, mode, src.w, src.h, 0, mode, GL_UNSIGNED_SHORT_5_5_5_1, src.data);
-            }
-            else {
-                glTexImage2D2(GL_TEXTURE_2D, 0, mode, src.w, src.h, 0, mode, GL_UNSIGNED_BYTE, src.data);
-            }
-=======
-            RenderBackend::uploadTexture2D(img);
-main
+            RenderBackend::uploadTexture2D(src);
             break;
     }
 
