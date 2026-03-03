@@ -10,19 +10,20 @@ make -C handheld/project/wii
 ```
 
 Output artifact:
-- `handheld/project/wii/minecraftwii.elf`
+- `handheld/project/wii/boot.elf`
+- `handheld/project/wii/boot.dol`
 
 ## Test in Dolphin
 1. Open Dolphin.
-2. Launch `minecraftwii.elf` directly.
+2. Launch `boot.elf` directly.
 
 ## Test on Homebrew Launcher (SD card)
 1. Convert ELF to DOL if needed:
    ```bash
-   elf2dol handheld/project/wii/minecraftwii.elf handheld/project/wii/minecraftwii.dol
+   elf2dol handheld/project/wii/boot.elf handheld/project/wii/boot.dol
    ```
 2. Create app folder on SD card, for example:
-   - `sd:/apps/minecraftwii/boot.dol` (copy `minecraftwii.dol` to `boot.dol`)
+   - `sd:/apps/minecraftwii/boot.dol` (copy `handheld/project/wii/boot.dol`)
    - `sd:/apps/minecraftwii/meta.xml`
    - `sd:/apps/minecraftwii/icon.png` (optional)
 3. Start Homebrew Channel and launch `minecraftwii`.
