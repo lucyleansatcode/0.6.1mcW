@@ -21,6 +21,16 @@ void MultiplyMatrixByVector4by4OpenGL_FLOAT(float *resultvector, const float *ma
 int glhInvertMatrixf2(float *m, float *out);
 int glhUnProjectf(float winx, float winy, float winz, float *modelview, float *projection, int *viewport, float *objectCoordinate);
 
+#else
+
+#include <gccore.h>
+
+// Wii uses GX, but some shared renderer headers still carry GL-style type names.
+// Map those names to libogc scalar types so the shared declarations stay buildable.
+typedef u32 GLuint;
+typedef s32 GLsizei;
+typedef f32 GLfloat;
+
 #endif
 
 #endif
