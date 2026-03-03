@@ -32,7 +32,8 @@ EXCLUDED_SRCS := \
 	$(SOURCES_DIR)/main_android.cpp \
 	$(SOURCES_DIR)/main_android_java.cpp \
 	$(SOURCES_DIR)/main_rpi.cpp \
-	$(SOURCES_DIR)/main_dedicated.cpp
+	$(SOURCES_DIR)/main_dedicated.cpp \
+	$(SOURCES_DIR)/AppPlatform_win32.cpp
 
 SOURCES := $(filter-out $(EXCLUDED_SRCS),$(shell find $(SOURCES_DIR) -name '*.cpp'))
 
