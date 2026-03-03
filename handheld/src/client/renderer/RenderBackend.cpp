@@ -2,6 +2,10 @@
 
 #include <unordered_map>
 
+#if !defined(WII) && !defined(__WII__)
+#include "gles.h"
+#endif
+
 #if defined(__WII__)
 #include <gccore.h>
 #include <vector>

@@ -3,11 +3,7 @@
 
 #include "TextureData.h"
 
-#if !defined(WII) && !defined(__WII__)
-#include "gles.h"
-#else
 static const unsigned int RB_TRIANGLES = 0x0004;
-#endif
 
 namespace RenderBackend {
 
@@ -30,13 +26,7 @@ void setDepthState(bool enabled, bool writeMask);
 void setCullState(bool enabled);
 void setBlendState(bool enabled, unsigned int srcFactor, unsigned int dstFactor);
 
-void submitTexturedMesh(int vertexCount, int vertexStride, unsigned int mode =
-#if defined(WII) || defined(__WII__)
-    RB_TRIANGLES
-#else
-    GL_TRIANGLES
-#endif
-);
+void submitTexturedMesh(int vertexCount, int vertexStride, unsigned int mode = RB_TRIANGLES);
 
 void bindArrayBuffer(unsigned int bufferId);
 void uploadArrayBuffer(const void* data, int bytes, bool dynamic);
