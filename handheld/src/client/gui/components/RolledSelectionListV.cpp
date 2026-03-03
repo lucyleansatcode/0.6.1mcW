@@ -1,7 +1,7 @@
 #include "RolledSelectionListV.h"
 #include "../../Minecraft.h"
 #include "../../renderer/Tesselator.h"
-#include "../../renderer/gles.h"
+#include "../../renderer/render_compat.h"
 #include "../../../platform/input/Mouse.h"
 #include "../../../util/Mth.h"
 #include "../../renderer/Textures.h"

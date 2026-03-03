@@ -7,7 +7,7 @@
 #include <crtdbg.h>
 */
 
-#include "client/renderer/gles.h"
+#include "client/renderer/render_compat.h"
 #include <EGL/egl.h>
 #define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>

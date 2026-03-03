@@ -1,6 +1,6 @@
 #include "ItemInHandRenderer.h"
 
-#include "gles.h"
+#include "render_compat.h"
 #include "Tesselator.h"
 #include "entity/EntityRenderDispatcher.h"
 #include "entity/EntityRenderer.h"

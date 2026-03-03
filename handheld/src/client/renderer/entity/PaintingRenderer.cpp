@@ -3,7 +3,7 @@
 #include "../../../world/Direction.h"
 #include "../Tesselator.h"
 #include "../Textures.h"
-#include "../gles.h"
+#include "../render_compat.h"
 
 void PaintingRenderer::render( Entity* entity, float x, float y, float z, float rot, float a ) {
 	glPushMatrix();

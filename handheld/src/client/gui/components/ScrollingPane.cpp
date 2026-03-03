@@ -1,5 +1,5 @@
 #include "ScrollingPane.h"
-#include "../../renderer/gles.h"
+#include "../../renderer/render_compat.h"
 #include "../Gui.h"
 #include "../../../util/Mth.h"
 #include "../../../SharedConstants.h"

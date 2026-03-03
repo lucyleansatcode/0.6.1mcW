@@ -2,7 +2,7 @@
 
 #include "../Tesselator.h"
 #include "../Textures.h"
-#include "../gles.h"
+#include "../render_compat.h"
 #include "../../../world/entity/Entity.h"
 #include "../../../world/entity/projectile/Arrow.h"
 

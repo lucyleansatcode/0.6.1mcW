@@ -27,7 +27,7 @@
 
 #include "FrustumData.h"
 #include "../../../util/Mth.h"
-#include "../gles.h"
+#include "../render_compat.h"
 
 class Frustum: public FrustumData
 {

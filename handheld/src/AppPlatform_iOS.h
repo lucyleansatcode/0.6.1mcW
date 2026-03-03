@@ -2,7 +2,7 @@
 #define APPPLATFORM_IOS_H__
 
 #include "AppPlatform.h"
-#include "client/renderer/gles.h"
+#include "client/renderer/render_compat.h"
 #include "platform/log.h"
 #include <cmath>
 #include <fstream>

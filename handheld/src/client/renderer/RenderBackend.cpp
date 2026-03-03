@@ -3,7 +3,7 @@
 #include <unordered_map>
 
 #if !defined(WII) && !defined(__WII__)
-#include "renderer_gx.h"
+#include "render_compat.h"
 #endif
 
 #if defined(__WII__)
@@ -39,8 +39,6 @@ void init() {
     GX_SetCullMode(GX_CULL_BACK);
     GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_TRUE);
     GX_SetBlendMode(GX_BM_NONE, GX_BL_ONE, GX_BL_ZERO, GX_LO_CLEAR);
-#else
-    glInit();
 #endif
 }
 

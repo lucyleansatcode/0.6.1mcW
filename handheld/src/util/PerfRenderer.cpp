@@ -3,7 +3,7 @@
 
 #include "Mth.h"
 #include "../client/gui/Font.h"
-#include "../client/renderer/gles.h"
+#include "../client/renderer/render_compat.h"
 #include "../client/renderer/Tesselator.h"
 #include "../client/Minecraft.h"
 

@@ -3,7 +3,7 @@
 
 #include "AppPlatform.h"
 #include "platform/log.h"
-#include "client/renderer/gles.h"
+#include "client/renderer/render_compat.h"
 #include "world/level/storage/FolderMethods.h"
 #include <png.h>
 #include <cmath>
