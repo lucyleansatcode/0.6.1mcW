@@ -1,6 +1,8 @@
 #ifndef NET_MINECRAFT_CLIENT_RENDERER__TextureData_H__
 #define NET_MINECRAFT_CLIENT_RENDERER__TextureData_H__
 
+#include <cstddef>
+
 enum TextureFormat
 {
     TEXF_UNCOMPRESSED_8888,
