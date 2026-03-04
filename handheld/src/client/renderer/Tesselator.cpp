@@ -1,431 +1,147 @@
-#include "Tesselator.h"
-#include <cstdio>
-#include <cstring>
-#include <algorithm>
-#include "RenderBackend.h"
+#include "ImageButton.h"
+#include "../../renderer/Tesselator.h"
+#include "../../Minecraft.h"
+#include "../../../platform/log.h"
+#include "../../../util/Mth.h"
+#include "../../renderer/Textures.h"
+#include <ogc/gx.h>
 
-Tesselator Tesselator::instance(sizeof(GLfloat) * MAX_FLOATS); // max size in bytes
-
-const int VertexSizeBytes = sizeof(VERTEX);
-
-Tesselator::Tesselator( int size )
-:	size(size),
-	vertices(0),
-	u(0), v(0),
-	_color(0),
-	hasColor(false),
-	hasTexture(false),
-	hasNormal(false),
-	p(0),
-	count(0),
-	_noColor(false),
-	mode(0),
-	xo(0), yo(0), zo(0),
-	_normal(0),
-	_sx(1), _sy(1),
-
-	tesselating(false),
-	vboId(-1),
-	vboCounts(128),
-	totalSize(0),
-	accessMode(ACCESS_STATIC),
-	maxVertices(size / sizeof(VERTEX)),
-	_voidBeginEnd(false)
+ImageButton::ImageButton(int id, const std::string& msg)
+:	super(id, msg)
 {
-	vboIds = new GLuint[vboCounts];
-
-	_varray = new VERTEX[maxVertices];
-
-	char* a = (char*)&_varray[0];
-	char* b = (char*)&_varray[1];
-	LOGI("Vsize: %lu, %d\n", sizeof(VERTEX), (b-a));
+	setupDefault();
 }
 
-Tesselator::~Tesselator()
+ImageButton::ImageButton(int id, const std::string& msg, const ImageDef& imagedef)
+:	super(id, msg),
+	_imageDef(imagedef)
 {
-	delete[] vboIds;
-	delete[] _varray;
+	setupDefault();
 }
 
-void Tesselator::init()
-{
-#ifndef STANDALONE_SERVER
-	glGenBuffers2(vboCounts, vboIds);
-#endif
+void ImageButton::setupDefault() {
+	width = 48;
+	height = 48;
+	scaleWhenPressed = true;
 }
 
-void Tesselator::clear()
-{
-	accessMode = ACCESS_STATIC;
-	vertices = 0;
-	count = 0;
-	p = 0;
-	_voidBeginEnd = false;
-}
-
-int Tesselator::getVboCount() {
-	return vboCounts;
-}
-
-RenderChunk Tesselator::end( bool useMine, int bufferId )
-{
-#ifndef STANDALONE_SERVER
-	//if (!tesselating) throw /*new*/ IllegalStateException("Not tesselating!");
-	if (!tesselating)
-		LOGI("not tesselating!\n");
-
-	if (!tesselating || _voidBeginEnd) return RenderChunk();
-
-	tesselating = false;
-	const int o_vertices = vertices;
-
-	if (vertices > 0) {
-		if (++vboId >= vboCounts)
-			vboId = 0;
-
-#ifdef USE_VBO
-		// Using VBO, use default buffer id only if we don't send in any
-		if (!useMine) {
-			bufferId = vboIds[vboId];
-		}
-#else
-		// Not using VBO - always use the next buffer object
-		bufferId = vboIds[vboId];
-#endif
-		int access = GL_STATIC_DRAW;//(accessMode==ACCESS_DYNAMIC) ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
-		int bytes = p * sizeof(VERTEX);
-		RenderBackend::bindArrayBuffer(bufferId);
-		RenderBackend::uploadArrayBuffer(_varray, bytes, access != GL_STATIC_DRAW); // GL_STREAM_DRAW
-		totalSize += bytes;
-
-#ifndef USE_VBO
-		// 0 1 2 3 4 5 6 7
-		// x y z u v c
-		if (hasTexture) {
-			glTexCoordPointer2(2, GL_FLOAT, VertexSizeBytes, (GLvoid*) (3 * 4));
-			glEnableClientState2(GL_TEXTURE_COORD_ARRAY);
-		}
-		if (hasColor) {
-			glColorPointer2(4, GL_UNSIGNED_BYTE, VertexSizeBytes, (GLvoid*) (5 * 4));
-			glEnableClientState2(GL_COLOR_ARRAY);
-		}
-		if (hasNormal) {
-			glNormalPointer(GL_BYTE, VertexSizeBytes, (GLvoid*) (6 * 4));
-			glEnableClientState2(GL_NORMAL_ARRAY);
-		}
-		glVertexPointer2(3, GL_FLOAT, VertexSizeBytes, 0);
-		glEnableClientState2(GL_VERTEX_ARRAY);
-
-		if (mode == GL_QUADS) {
-			glDrawArrays2(GL_TRIANGLES, 0, vertices);
-		} else {
-			glDrawArrays2(mode, 0, vertices);
-		}
-		//printf("drawing %d tris, size %d (%d,%d,%d)\n", vertices, p, hasTexture, hasColor, hasNormal);
-		glDisableClientState2(GL_VERTEX_ARRAY);
-		if (hasTexture) glDisableClientState2(GL_TEXTURE_COORD_ARRAY);
-		if (hasColor) glDisableClientState2(GL_COLOR_ARRAY);
-		if (hasNormal) glDisableClientState2(GL_NORMAL_ARRAY);
-#endif /*!USE_VBO*/
-	}
-
-	clear();
-	RenderChunk out(bufferId, o_vertices);
-	//map.insert( std::make_pair(bufferId, out.id) );
-	return out;
-#else
-	return RenderChunk();
-#endif
-
-}
-
-void Tesselator::begin( int mode )
-{
-	if (tesselating || _voidBeginEnd) {
-		if (tesselating && !_voidBeginEnd)
-			LOGI("already tesselating!\n");
-		return;
-	}
-	//if (tesselating) {
-	//    throw /*new*/ IllegalStateException("Already tesselating!");
-	//}
-	tesselating = true;
-
-	clear();
-	this->mode = mode;
-	hasNormal = false;
-	hasColor = false;
-	hasTexture = false;
-	_noColor = false;
-}
-
-void Tesselator::begin()
-{
-	begin(GL_QUADS);
-}
-
-void Tesselator::tex( float u, float v )
-{
-	hasTexture = true;
-	this->u = u;
-	this->v = v;
-}
-
-int Tesselator::getColor() {
-	return _color;
-}
-
-void Tesselator::color( float r, float g, float b )
-{
-	color((int) (r * 255), (int) (g * 255), (int) (b * 255));
-}
-
-void Tesselator::color( float r, float g, float b, float a )
-{
-	color((int) (r * 255), (int) (g * 255), (int) (b * 255), (int) (a * 255));
-}
-
-void Tesselator::color( int r, int g, int b )
-{
-	color(r, g, b, 255);
-}
-
-void Tesselator::color( int r, int g, int b, int a )
-{
-	if (_noColor) return;
-
-	if (r > 255) r = 255;
-	if (g > 255) g = 255;
-	if (b > 255) b = 255;
-	if (a > 255) a = 255;
-	if (r < 0) r = 0;
-	if (g < 0) g = 0;
-	if (b < 0) b = 0;
-	if (a < 0) a = 0;
-
-	hasColor = true;
-	//if (ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN) {
-	if (true) {
-		_color = (a << 24) | (b << 16) | (g << 8) | (r);
-	} else {
-		_color = (r << 24) | (g << 16) | (b << 8) | (a);
+void ImageButton::setImageDef(const ImageDef& imageDef, bool setButtonSize) {
+	_imageDef = imageDef;
+	if (setButtonSize) {
+		width = (int)_imageDef.width;
+		height = (int)_imageDef.height;
 	}
 }
 
-void Tesselator::color( char r, char g, char b )
-{
-	color(r & 0xff, g & 0xff, b & 0xff);
-}
+void ImageButton::render(Minecraft* minecraft, int xm, int ym) {
+	if (!visible) return;
 
-void Tesselator::color( int c )
-{
-	int r = ((c >> 16) & 255);
-	int g = ((c >> 8) & 255);
-	int b = ((c) & 255);
-	color(r, g, b);
-}
+	Font* font = minecraft->font;
 
-//@note: doesn't care about endianess
-void Tesselator::colorABGR( int c )
-{
-	if (_noColor) return;
-	hasColor = true;
-	_color = c;
-}
+	bool hovered = active && (minecraft->useTouchscreen()? (_currentlyDown && xm >= x && ym >= y && xm < x + width && ym < y + height) : false);
+	bool IsSecondImage = isSecondImage(hovered);
 
-void Tesselator::color( int c, int alpha )
-{
-	int r = ((c >> 16) & 255);
-	int g = ((c >> 8) & 255);
-	int b = ((c) & 255);
-	color(r, g, b, alpha);
-}
+	renderBg(minecraft, xm, ym);
 
-void Tesselator::vertexUV( float x, float y, float z, float u, float v )
-{
-	tex(u, v);
-	vertex(x, y, z);
-}
-
-void Tesselator::scale2d(float sx, float sy) {
-	_sx *= sx;
-	_sy *= sy;
-}
-
-void Tesselator::resetScale() {
-	_sx = _sy = 1;
-}
-
-void Tesselator::vertex( float x, float y, float z )
-{
-#ifndef STANDALONE_SERVER
-	count++;
-
-	if (mode == GL_QUADS && (count & 3) == 0) {
-		for (int i = 0; i < 2; i++) {
-
-			const int offs = 3 - i;
-			VERTEX& src = _varray[p - offs];
-			VERTEX& dst = _varray[p];
-
-			if (hasTexture) {
-				dst.u = src.u;
-				dst.v = src.v;
-			}
-			if (hasColor) {
-				dst.color = src.color;
-			}
-			//if (hasNormal) {
-			//	dst.normal = src.normal;
-			//}
-
-			dst.x = src.x;
-			dst.y = src.y;
-			dst.z = src.z;
-
-			++vertices;
-			++p;
-		}
-	}
-
-	VERTEX& vertex = _varray[p];
-
-	if (hasTexture) {
-		vertex.u = u;
-		vertex.v = v;
-	}
-	if (hasColor) {
-		vertex.color = _color;
-	}
-	//if (hasNormal) {
-	//	vertex.normal = _normal;
-	//}
-
-	vertex.x = _sx * (x + xo);
-	vertex.y = _sy * (y + yo);
-	vertex.z = z + zo;
-
-	++p;
-	++vertices;
-
-	if ((vertices & 3) == 0 && p >= maxVertices-1) {
-		for (int i = 0; i < 3; ++i)
-			printf("Overwriting the vertex buffer! This chunk/entity won't show up\n");
-		clear();
-	}
-#endif
-}
-
-void Tesselator::noColor()
-{
-	_noColor = true;
-}
-
-void Tesselator::setAccessMode(int mode)
-{
-	accessMode = mode;
-}
-
-void Tesselator::normal( float x, float y, float z )
-{
-	static int _warn_t = 0;
-	if ((++_warn_t & 32767) == 1)
-		LOGI("WARNING: Can't use normals (Tesselator::normal)\n");
-	return;
-
-	if (!tesselating) printf("But..");
-	hasNormal = true;
-	char xx = (char) (x * 128);
-	char yy = (char) (y * 127);
-	char zz = (char) (z * 127);
-
-	_normal = xx | (yy << 8) | (zz << 16);
-}
-
-void Tesselator::offset( float xo, float yo, float zo ) {
-	this->xo = xo;
-	this->yo = yo;
-	this->zo = zo;
-}
-
-void Tesselator::addOffset( float x, float y, float z ) {
-	xo += x;
-	yo += y;
-	zo += z;
-}
-
-void Tesselator::offset( const Vec3& v ) {
-	xo = v.x;
-	yo = v.y;
-	zo = v.z;
-}
-
-void Tesselator::addOffset( const Vec3& v ) {
-	xo += v.x;
-	yo += v.y;
-	zo += v.z;
-}
-
-void Tesselator::draw()
-{
-#ifndef STANDALONE_SERVER
-	if (!tesselating)
-		LOGI("not (draw) tesselating!\n");
-
-	if (!tesselating || _voidBeginEnd)
-		return;
-
-	tesselating = false;
-
-	if (vertices > 0) {
-		if (++vboId >= vboCounts)
-			vboId = 0;
-
-		int bufferId = vboIds[vboId];
+	TextureId texId = (_imageDef.name.length() > 0)? minecraft->textures->loadAndBindTexture(_imageDef.name) : Textures::InvalidId;
+	if ( Textures::isTextureIdValid(texId) ) {
+		const ImageDef& d = _imageDef;
+		Tesselator& t = Tesselator::instance;
 		
-		int access = GL_DYNAMIC_DRAW;//(accessMode==ACCESS_DYNAMIC) ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
-		int bytes = p * sizeof(VERTEX);
-		RenderBackend::bindArrayBuffer(bufferId);
-		RenderBackend::uploadArrayBuffer(_varray, bytes, access != GL_STATIC_DRAW); // GL_STREAM_DRAW
+		t.begin();
 
-		if (hasTexture) {
-			glTexCoordPointer2(2, GL_FLOAT, VertexSizeBytes, (GLvoid*) (3 * 4));
-			//glTexCoordPointer2(2, GL_FLOAT, VertexSizeBytes, (GLvoid*) &_varray->u);
-			glEnableClientState2(GL_TEXTURE_COORD_ARRAY);
-		}
-		if (hasColor) {
-			glColorPointer2(4, GL_UNSIGNED_BYTE, VertexSizeBytes, (GLvoid*) (5 * 4));
-			//glColorPointer2(4, GL_UNSIGNED_BYTE, VertexSizeBytes, (GLvoid*) &_varray->color);
-			glEnableClientState2(GL_COLOR_ARRAY);
-		}
-		//if (hasNormal) {
-		//	glNormalPointer(GL_BYTE, VertexSizeBytes, (GLvoid*) (6 * 4));
-		//	glEnableClientState2(GL_NORMAL_ARRAY);
-		//}
-		//glVertexPointer2(3, GL_FLOAT, VertexSizeBytes, (GLvoid*)&_varray);
-		glVertexPointer2(3, GL_FLOAT, VertexSizeBytes, 0);
-		glEnableClientState2(GL_VERTEX_ARRAY);
+		// Set color per vertex
+		if (!active)				t.color(0x80808080); // grey
+		else						t.color(0xFFFFFFFF); // white
 
-		if (mode == GL_QUADS) {
-			glDrawArrays2(GL_TRIANGLES, 0, vertices);
+		float hx = ((float) d.width) * 0.5f;
+		float hy = ((float) d.height) * 0.5f;
+		const float cx = ((float)x+d.x) + hx;
+		const float cy = ((float)y+d.y) + hy;
+
+		if (scaleWhenPressed && hovered) {
+			hx *= 0.95f;
+			hy *= 0.95f;
+		}
+
+		const IntRectangle* src = _imageDef.getSrc();
+		if (src) {
+			const TextureData* d = minecraft->textures->getTemporaryTextureData(texId);
+			if (d != NULL) {
+				float u0 = (src->x+(IsSecondImage?src->w:0)) / (float)d->w;
+				float u1 = (src->x+(IsSecondImage?2*src->w:src->w)) / (float)d->w;
+				float v0 = src->y / (float)d->h;
+				float v1 = (src->y+src->h) / (float)d->h;
+				t.vertexUV(cx-hx, cy-hy, blitOffset, u0, v0);
+				t.vertexUV(cx-hx, cy+hy, blitOffset, u0, v1);
+				t.vertexUV(cx+hx, cy+hy, blitOffset, u1, v1);
+				t.vertexUV(cx+hx, cy-hy, blitOffset, u1, v0);
+			}
 		} else {
-			glDrawArrays2(mode, 0, vertices);
+			t.vertexUV(cx-hx, cy-hy, blitOffset, 0, 0);
+			t.vertexUV(cx-hx, cy+hy, blitOffset, 0, 1);
+			t.vertexUV(cx+hx, cy+hy, blitOffset, 1, 1);
+			t.vertexUV(cx+hx, cy-hy, blitOffset, 1, 0);
 		}
 
-		glDisableClientState2(GL_VERTEX_ARRAY);
-		if (hasTexture) glDisableClientState2(GL_TEXTURE_COORD_ARRAY);
-		if (hasColor) glDisableClientState2(GL_COLOR_ARRAY);
-		//if (hasNormal) glDisableClientState2(GL_NORMAL_ARRAY);
+		t.draw();
 	}
 
-	clear();
-#endif
+	if (!active) {
+		drawCenteredString(font, msg, x + width / 2, y + 16, 0xffa0a0a0);
+	} else {
+		if (hovered || selected) {
+			drawCenteredString(font, msg, x + width / 2, y + 17, 0xffffa0);
+		} else {
+			drawCenteredString(font, msg, x + width / 2, y + 16, 0xe0e0e0);
+		}
+	}
 }
 
-void Tesselator::voidBeginAndEndCalls(bool doVoid) {
-	_voidBeginEnd = doVoid;
+// --- OptionButton ---
+
+OptionButton::OptionButton(const Options::Option* option)
+:	_option(option),
+	_isFloat(false),
+	super(ButtonId, "")
+{
 }
 
-void Tesselator::enableColor() {
-	_noColor = false;
+OptionButton::OptionButton(const Options::Option* option, float onValue, float offValue)
+:	_option(option),
+	_isFloat(true),
+	_onValue(onValue),
+	_offValue(offValue),
+	super(ButtonId, "")
+{
+}
+
+bool OptionButton::isSecondImage(bool hovered) {
+	return _secondImage;
+}
+
+void OptionButton::toggle(Options* options) {
+	if (_isFloat) {
+		options->set(_option, (Mth::abs(_current - _onValue) < 0.01f) ? _offValue : _onValue);
+	} else {
+		options->toggle(_option, 1);
+	}
+	updateImage(options);
+}
+
+void OptionButton::updateImage(Options* options) {
+	if (_isFloat) {
+		_current = options->getProgressValue(_option);
+		_secondImage = Mth::abs(_current - _onValue) < 0.01f;
+	} else {
+		_secondImage = options->getBooleanValue(_option);
+	}
+}
+
+void OptionButton::mouseClicked(Minecraft* minecraft, int x, int y, int buttonNum) {
+	if(buttonNum == MouseAction::ACTION_LEFT) {
+		if(clicked(minecraft, x, y)) {
+			toggle(&minecraft->options);
+		}
+	}
 }
