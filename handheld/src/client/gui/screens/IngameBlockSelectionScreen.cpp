@@ -2,6 +2,7 @@
 #include "../../renderer/TileRenderer.h"
 #include "../../player/LocalPlayer.h"
 #include "../../renderer/render_compat.h"
+#include "../../renderer/RenderBackend.h"
 #include "../../Minecraft.h"
 #include "../../sound/SoundEngine.h"
 #include "../../../world/entity/player/Inventory.h"
@@ -154,11 +155,11 @@ void IngameBlockSelectionScreen::renderSlot(int slot, int x, int y, float a)
 	if (minecraft->gameMode->isCreativeType()) return;
 	if (!isAllowed(slot - Inventory::MAX_SELECTION_SIZE)) return;
 
-	glPushMatrix2();
-	glScalef2(Gui::InvGuiScale + Gui::InvGuiScale, Gui::InvGuiScale + Gui::InvGuiScale, 1);
+	RenderBackend::pushModelMatrix();
+	RenderBackend::scaleModel(Gui::InvGuiScale + Gui::InvGuiScale, Gui::InvGuiScale + Gui::InvGuiScale, 1);
 	const float k = 0.5f * Gui::GuiScale;
 	minecraft->gui.renderSlotText(item, k*x, k*y, true, true);
-	glPopMatrix2();
+	RenderBackend::popModelMatrix();
 }
 
 void IngameBlockSelectionScreen::keyPressed(int eventKey)

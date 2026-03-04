@@ -18,6 +18,19 @@ void init();
 void setPerspective(float fovYDeg, float aspect, float zNear, float zFar);
 void setOrtho(float left, float right, float bottom, float top, float zNear, float zFar);
 
+/* Matrix Helpers */
+
+void pushModelMatrix();
+void popModelMatrix();
+void loadModelIdentity();
+void translateModel(float x, float y, float z);
+void scaleModel(float x, float y, float z);
+void rotateModel(float angleDeg, float x, float y, float z);
+
+void pushProjectionMatrix();
+void popProjectionMatrix();
+void loadProjectionIdentity();
+
 /* Texture */
 
 void configureTextureSampling(bool useMipMap, bool blur, bool clamp);
