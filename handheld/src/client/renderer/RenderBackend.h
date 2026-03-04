@@ -20,6 +20,14 @@ void setOrtho(float left, float right, float bottom, float top, float zNear, flo
 
 /* Matrix Helpers */
 
+// Model matrix helpers operate on the backend-managed model stack and always
+// affect subsequent draw calls immediately.
+// - push*/pop* are balanced stack operations; pop on an empty stack is a no-op.
+// - load*Identity resets the current matrix to identity.
+// - translate/scale/rotate post-multiply the current model matrix.
+// - Wii/GX and GL backends use the same logical ordering so callsites can share
+//   transform code without platform branches.
+
 void pushModelMatrix();
 void popModelMatrix();
 void loadModelIdentity();
@@ -47,14 +55,28 @@ void setDepthState(bool enabled, bool writeMask);
 void setDepthWriteMask(bool writeMask);
 void setDepthTestState(bool enabled);
 void setCullState(bool enabled);
+// Enables/disables color blending. When enabled, srcFactor/dstFactor are GL-era
+// blend constants.
+// Backends should map known factors to native APIs. Unsupported pairs must use
+// a deterministic fallback (standard alpha blend: SRC_ALPHA, ONE_MINUS_SRC_ALPHA)
+// and surface a debug warning/assert so regressions are visible.
 void setBlendState(bool enabled, unsigned int srcFactor, unsigned int dstFactor);
 void setBlendEnabled(bool enabled);
 void setBlendFunc(unsigned int srcFactor, unsigned int dstFactor);
+// Alpha test compatibility switch.
+// - enabled=true: reject fully transparent fragments (alpha > 0 style cutout).
+// - enabled=false: disable alpha rejection (all fragments pass).
+// Backends that cannot represent the exact legacy GL state should implement the
+// deterministic behavior above.
 void setAlphaTestState(bool enabled);
 void setTextureState(bool enabled);
 void setFogState(bool enabled);
 void setColor(float r, float g, float b, float a);
 void setShadeModel(unsigned int mode);
+// Enables/disables rectangular clipping for subsequent draws.
+// Rectangle coordinates use the backend's window-space convention expected by
+// current callsites. Disabling must restore a full-frame scissor region.
+// Invalid dimensions are clamped to a disabled/full-frame outcome.
 void setScissorState(bool enabled, int x, int y, int width, int height);
 
 /* Geometry Submission */

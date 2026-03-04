@@ -1,6 +1,9 @@
 #include "RenderBackend.h"
 
+#include <cassert>
 #include <unordered_map>
+
+#include "platform/log.h"
 
 #if !defined(WII) && !defined(__WII__)
 #include "render_compat.h"
@@ -12,6 +15,9 @@ namespace RenderBackend {
 namespace {
 TextureId s_boundTexture = 0;
 TextureId s_nextTextureId = 1;
+bool s_blendEnabled = false;
+unsigned int s_blendSrcFactor = 0x0302; // GL_SRC_ALPHA
+unsigned int s_blendDstFactor = 0x0303; // GL_ONE_MINUS_SRC_ALPHA
 }
 
 namespace WiiRenderer {
@@ -245,7 +251,11 @@ void setDepthState(bool enabled, bool writeMask) {
 
 void setDepthWriteMask(bool writeMask) {
 #if defined(__WII__)
-    (void)writeMask;
+    LOGW("RenderBackend(Wii): setDepthWriteMask(%d) is not independently supported; use setDepthState for deterministic behavior\n",
+         writeMask ? 1 : 0);
+#if !defined(NDEBUG)
+    assert(false && "Unsupported independent depth write mask request on Wii backend");
+#endif
 #else
     glDepthMask(writeMask ? GL_TRUE : GL_FALSE);
 #endif
@@ -253,7 +263,11 @@ void setDepthWriteMask(bool writeMask) {
 
 void setDepthTestState(bool enabled) {
 #if defined(__WII__)
-    (void)enabled;
+    LOGW("RenderBackend(Wii): setDepthTestState(%d) is not independently supported; use setDepthState for deterministic behavior\n",
+         enabled ? 1 : 0);
+#if !defined(NDEBUG)
+    assert(false && "Unsupported independent depth test request on Wii backend");
+#endif
 #else
     if (enabled) glEnable2(GL_DEPTH_TEST); else glDisable2(GL_DEPTH_TEST);
 #endif
@@ -269,6 +283,9 @@ void setCullState(bool enabled) {
 
 void setBlendState(bool enabled, unsigned int srcFactor, unsigned int dstFactor) {
 #if defined(__WII__)
+    s_blendEnabled = enabled;
+    s_blendSrcFactor = srcFactor;
+    s_blendDstFactor = dstFactor;
     WiiRenderer::setBlendState(enabled, srcFactor, dstFactor);
 #else
     if (enabled) {
@@ -282,7 +299,8 @@ void setBlendState(bool enabled, unsigned int srcFactor, unsigned int dstFactor)
 
 void setBlendEnabled(bool enabled) {
 #if defined(__WII__)
-    (void)enabled;
+    s_blendEnabled = enabled;
+    WiiRenderer::setBlendState(s_blendEnabled, s_blendSrcFactor, s_blendDstFactor);
 #else
     if (enabled) glEnable2(GL_BLEND); else glDisable2(GL_BLEND);
 #endif
@@ -290,8 +308,9 @@ void setBlendEnabled(bool enabled) {
 
 void setBlendFunc(unsigned int srcFactor, unsigned int dstFactor) {
 #if defined(__WII__)
-    (void)srcFactor;
-    (void)dstFactor;
+    s_blendSrcFactor = srcFactor;
+    s_blendDstFactor = dstFactor;
+    WiiRenderer::setBlendState(s_blendEnabled, s_blendSrcFactor, s_blendDstFactor);
 #else
     glBlendFunc2(srcFactor, dstFactor);
 #endif

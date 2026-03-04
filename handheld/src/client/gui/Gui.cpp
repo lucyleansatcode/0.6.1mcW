@@ -276,7 +276,7 @@ void Gui::renderVignette(float br, int w, int h) {
 
 	GuiRenderContext::setDepthState(false, true);
 	GuiRenderContext::setDepthState(false, false);
-	GuiRenderContext::setBlendState(true, GuiRenderContext::BlendZero, GuiRenderContext::BlendOneMinusSrcColor);
+	GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 	GuiRenderContext::setColor(tbr, tbr, tbr, 1);
 	minecraft->textures->loadAndBindTexture("misc/vignette.png");
 
@@ -509,7 +509,7 @@ void Gui::renderProgressIndicator( const bool isTouchInterface, const int screen
 	if (!isTouchInterface || minecraft->options.isJoyTouchArea || (bowEquipped && itemInUse)) {
 		minecraft->textures->loadAndBindTexture("gui/icons.png");
 		GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
-		GuiRenderContext::setBlendState(true, GuiRenderContext::BlendOneMinusDstColor, GuiRenderContext::BlendOneMinusSrcColor);
+		GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 		blit(screenWidth/2 - 8, screenHeight/2 - 8, 0, 0, 16, 16);
 		GuiRenderContext::setBlendState(false, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 	} else if(!bowEquipped) {
@@ -554,7 +554,7 @@ void Gui::renderProgressIndicator( const bool isTouchInterface, const int screen
 			drawArrayVT(rcFeedbackOuter.vboId, rcFeedbackOuter.vertexCount, 24);
 			GuiRenderContext::scale(0.5f + progress, 0.5f + progress, 1);
 			GuiRenderContext::setColor(1, 1, 1, 1);
-			GuiRenderContext::setBlendState(true, GuiRenderContext::BlendOneMinusDstColor, GuiRenderContext::BlendOneMinusSrcColor);
+			GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 			drawArrayVT(rcFeedbackInner.vboId, rcFeedbackInner.vertexCount, 24, GL_TRIANGLE_FAN);
 			GuiRenderContext::popMatrix();
 

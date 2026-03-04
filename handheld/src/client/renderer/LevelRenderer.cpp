@@ -433,7 +433,7 @@ void LevelRenderer::renderDebug(const AABB& b, float a) const {
 	float u1 = 1, v1 = 1;
 
 	RenderBackend::setBlendEnabled(true);
-	RenderBackend::setBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
+	RenderBackend::setBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	RenderBackend::setTextureState(false);
 	glColor4f2(1, 1, 1, 1);
 
@@ -779,7 +779,7 @@ void LevelRenderer::renderHit( Player* player, const HitResult& h, int mode, /*I
 		if (destroyProgress > 0) {
 			Tesselator& t = Tesselator::instance;
 			RenderBackend::setBlendEnabled(true);
-			RenderBackend::setBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
+			RenderBackend::setBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 			textures->loadAndBindTexture("terrain.png");
 			RenderBackend::pushModelMatrix();
@@ -1211,7 +1211,7 @@ void LevelRenderer::renderHitSelect( Player* player, const HitResult& h, int mod
 		RenderBackend::setBlendEnabled(true);
 		RenderBackend::setTextureState(false);
 		RenderBackend::setBlendFunc(GL_SRC_ALPHA, GL_ONE);
-		RenderBackend::setBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
+		RenderBackend::setBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		RenderBackend::setDepthTestState(true);
 
 		textures->loadAndBindTexture("terrain.png");
