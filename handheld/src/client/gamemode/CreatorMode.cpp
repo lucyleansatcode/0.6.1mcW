@@ -1,6 +1,5 @@
 #include "CreatorMode.h"
 #include "../Minecraft.h"
-#include "../particle/ParticleEngine.h"
 #include "../player/LocalPlayer.h"
 #include "../renderer/LevelRenderer.h"
 #include "../sound/SoundEngine.h"

@@ -2,7 +2,6 @@
 #include "../Minecraft.h"
 #include "../player/LocalPlayer.h"
 #ifndef STANDALONE_SERVER
-#include "../particle/ParticleEngine.h"
 #include "../sound/SoundEngine.h"
 #endif
 #include "../../world/level/Level.h"
