@@ -6,40 +6,37 @@
 #include "render_compat.h"
 #endif
 
-#if defined(__WII__)
-#include <gccore.h>
-#include <vector>
-#endif
-
 namespace RenderBackend {
 
 #if defined(__WII__)
 namespace {
-TextureId s_nextTextureId = 1;
 TextureId s_boundTexture = 0;
-Mtx s_modelMatrix;
-Mtx44 s_projectionMatrix;
-struct ModelMtxState { Mtx m; };
-struct ProjMtxState { Mtx44 m; int type; };
-std::vector<ModelMtxState> s_modelStack;
-std::vector<ProjMtxState> s_projectionStack;
-int s_projectionType = GX_PERSPECTIVE;
-
-void applyModelMatrix() {
-    GX_LoadPosMtxImm(s_modelMatrix, GX_PNMTX0);
-}
-
-void applyProjectionMatrix() {
-    GX_LoadProjectionMtx(s_projectionMatrix, s_projectionType);
-}
+TextureId s_nextTextureId = 1;
 }
 
 namespace WiiRenderer {
+void init();
+void setPerspective(float fovYDeg, float aspect, float zNear, float zFar);
+void setOrtho(float left, float right, float bottom, float top, float zNear, float zFar);
+void pushModelMatrix();
+void popModelMatrix();
+void loadModelIdentity();
+void translateModel(float x, float y, float z);
+void scaleModel(float x, float y, float z);
+void rotateModel(float angleDeg, float x, float y, float z);
+void pushProjectionMatrix();
+void popProjectionMatrix();
+void loadProjectionIdentity();
 void registerTexture(TextureId id);
 void deleteTexture(TextureId id);
 void bindTexture(TextureId id);
 void configureTextureSampling(TextureId id, bool useMipMap, bool blur, bool clamp);
 void uploadTexture2D(TextureId id, const TextureData& img);
+void setDepthState(bool enabled, bool writeMask);
+void setCullState(bool enabled);
+void setBlendState(bool enabled, unsigned int srcFactor, unsigned int dstFactor);
+void setAlphaTestState(bool enabled);
+void setScissorState(bool enabled, int x, int y, int width, int height);
 }
 #else
 namespace {
@@ -50,27 +47,13 @@ TextureId s_nextTextureId = 1;
 
 void init() {
 #if defined(__WII__)
-    // GX init is expected to happen in the platform layer before rendering.
-    GX_SetCullMode(GX_CULL_BACK);
-    GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_TRUE);
-    GX_SetBlendMode(GX_BM_NONE, GX_BL_ONE, GX_BL_ZERO, GX_LO_CLEAR);
-    guMtxIdentity(s_modelMatrix);
-    guMtx44Identity(s_projectionMatrix);
-    s_modelStack.clear();
-    s_projectionStack.clear();
-    applyModelMatrix();
-    s_projectionType = GX_PERSPECTIVE;
-    applyProjectionMatrix();
+    WiiRenderer::init();
 #endif
 }
 
 void setPerspective(float fovYDeg, float aspect, float zNear, float zFar) {
 #if defined(__WII__)
-    Mtx44 p;
-    guPerspective(p, fovYDeg, aspect, zNear, zFar);
-    guMtx44Copy(p, s_projectionMatrix);
-    s_projectionType = GX_PERSPECTIVE;
-    applyProjectionMatrix();
+    WiiRenderer::setPerspective(fovYDeg, aspect, zNear, zFar);
 #else
     gluPerspective(fovYDeg, aspect, zNear, zFar);
 #endif
@@ -78,11 +61,7 @@ void setPerspective(float fovYDeg, float aspect, float zNear, float zFar) {
 
 void setOrtho(float left, float right, float bottom, float top, float zNear, float zFar) {
 #if defined(__WII__)
-    Mtx44 p;
-    guOrtho(p, top, bottom, left, right, zNear, zFar);
-    guMtx44Copy(p, s_projectionMatrix);
-    s_projectionType = GX_ORTHOGRAPHIC;
-    applyProjectionMatrix();
+    WiiRenderer::setOrtho(left, right, bottom, top, zNear, zFar);
 #else
     glOrthof(left, right, bottom, top, zNear, zFar);
 #endif
@@ -90,9 +69,7 @@ void setOrtho(float left, float right, float bottom, float top, float zNear, flo
 
 void pushModelMatrix() {
 #if defined(__WII__)
-    ModelMtxState state;
-    guMtxCopy(s_modelMatrix, state.m);
-    s_modelStack.push_back(state);
+    WiiRenderer::pushModelMatrix();
 #else
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
@@ -101,10 +78,7 @@ void pushModelMatrix() {
 
 void popModelMatrix() {
 #if defined(__WII__)
-    if (s_modelStack.empty()) return;
-    guMtxCopy(s_modelStack.back().m, s_modelMatrix);
-    s_modelStack.pop_back();
-    applyModelMatrix();
+    WiiRenderer::popModelMatrix();
 #else
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
@@ -113,8 +87,7 @@ void popModelMatrix() {
 
 void loadModelIdentity() {
 #if defined(__WII__)
-    guMtxIdentity(s_modelMatrix);
-    applyModelMatrix();
+    WiiRenderer::loadModelIdentity();
 #else
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -123,8 +96,7 @@ void loadModelIdentity() {
 
 void translateModel(float x, float y, float z) {
 #if defined(__WII__)
-    guMtxTransApply(s_modelMatrix, s_modelMatrix, x, y, z);
-    applyModelMatrix();
+    WiiRenderer::translateModel(x, y, z);
 #else
     glMatrixMode(GL_MODELVIEW);
     glTranslatef(x, y, z);
@@ -133,10 +105,7 @@ void translateModel(float x, float y, float z) {
 
 void scaleModel(float x, float y, float z) {
 #if defined(__WII__)
-    Mtx scale;
-    guMtxScale(scale, x, y, z);
-    guMtxConcat(s_modelMatrix, scale, s_modelMatrix);
-    applyModelMatrix();
+    WiiRenderer::scaleModel(x, y, z);
 #else
     glMatrixMode(GL_MODELVIEW);
     glScalef(x, y, z);
@@ -145,11 +114,7 @@ void scaleModel(float x, float y, float z) {
 
 void rotateModel(float angleDeg, float x, float y, float z) {
 #if defined(__WII__)
-    Mtx rotate;
-    guVector axis = { x, y, z };
-    guMtxRotAxisDeg(rotate, &axis, angleDeg);
-    guMtxConcat(s_modelMatrix, rotate, s_modelMatrix);
-    applyModelMatrix();
+    WiiRenderer::rotateModel(angleDeg, x, y, z);
 #else
     glMatrixMode(GL_MODELVIEW);
     glRotatef(angleDeg, x, y, z);
@@ -158,10 +123,7 @@ void rotateModel(float angleDeg, float x, float y, float z) {
 
 void pushProjectionMatrix() {
 #if defined(__WII__)
-    ProjMtxState state;
-    guMtx44Copy(s_projectionMatrix, state.m);
-    state.type = s_projectionType;
-    s_projectionStack.push_back(state);
+    WiiRenderer::pushProjectionMatrix();
 #else
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
@@ -170,11 +132,7 @@ void pushProjectionMatrix() {
 
 void popProjectionMatrix() {
 #if defined(__WII__)
-    if (s_projectionStack.empty()) return;
-    s_projectionType = s_projectionStack.back().type;
-    guMtx44Copy(s_projectionStack.back().m, s_projectionMatrix);
-    s_projectionStack.pop_back();
-    applyProjectionMatrix();
+    WiiRenderer::popProjectionMatrix();
 #else
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
@@ -183,9 +141,7 @@ void popProjectionMatrix() {
 
 void loadProjectionIdentity() {
 #if defined(__WII__)
-    guMtx44Identity(s_projectionMatrix);
-    s_projectionType = GX_ORTHOGRAPHIC;
-    applyProjectionMatrix();
+    WiiRenderer::loadProjectionIdentity();
 #else
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -280,7 +236,7 @@ void updateTexture2D(int x, int y, int w, int h, const void* data, int format, i
 
 void setDepthState(bool enabled, bool writeMask) {
 #if defined(__WII__)
-    GX_SetZMode(enabled ? GX_TRUE : GX_FALSE, GX_LEQUAL, writeMask ? GX_TRUE : GX_FALSE);
+    WiiRenderer::setDepthState(enabled, writeMask);
 #else
     if (enabled) glEnable2(GL_DEPTH_TEST); else glDisable2(GL_DEPTH_TEST);
     glDepthMask(writeMask ? GL_TRUE : GL_FALSE);
@@ -289,7 +245,7 @@ void setDepthState(bool enabled, bool writeMask) {
 
 void setCullState(bool enabled) {
 #if defined(__WII__)
-    GX_SetCullMode(enabled ? GX_CULL_BACK : GX_CULL_NONE);
+    WiiRenderer::setCullState(enabled);
 #else
     if (enabled) glEnable2(GL_CULL_FACE); else glDisable2(GL_CULL_FACE);
 #endif
@@ -297,10 +253,7 @@ void setCullState(bool enabled) {
 
 void setBlendState(bool enabled, unsigned int srcFactor, unsigned int dstFactor) {
 #if defined(__WII__)
-    if (enabled) GX_SetBlendMode(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_NOOP);
-    else GX_SetBlendMode(GX_BM_NONE, GX_BL_ONE, GX_BL_ZERO, GX_LO_CLEAR);
-    (void)srcFactor;
-    (void)dstFactor;
+    WiiRenderer::setBlendState(enabled, srcFactor, dstFactor);
 #else
     if (enabled) {
         glEnable2(GL_BLEND);
@@ -314,8 +267,7 @@ void setBlendState(bool enabled, unsigned int srcFactor, unsigned int dstFactor)
 
 void setAlphaTestState(bool enabled) {
 #if defined(__WII__)
-    // Alpha test state is handled by the TEV pipeline for GUI rendering.
-    (void)enabled;
+    WiiRenderer::setAlphaTestState(enabled);
 #else
     if (enabled) glEnable2(GL_ALPHA_TEST); else glDisable2(GL_ALPHA_TEST);
 #endif
@@ -323,11 +275,7 @@ void setAlphaTestState(bool enabled) {
 
 void setScissorState(bool enabled, int x, int y, int width, int height) {
 #if defined(__WII__)
-    (void)enabled;
-    (void)x;
-    (void)y;
-    (void)width;
-    (void)height;
+    WiiRenderer::setScissorState(enabled, x, y, width, height);
 #else
     if (enabled) {
         glEnable2(GL_SCISSOR_TEST);
