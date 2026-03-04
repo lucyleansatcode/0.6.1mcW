@@ -14,6 +14,7 @@
 #include "../../renderer/entity/EntityRenderDispatcher.h"
 #include "../../renderer/RenderBackend.h"
 #include "../../../world/item/ArmorItem.h"
+#include "../GuiRenderContext.h"
 
 static void setIfNotSet(bool& ref, bool condition) {
 	ref = (ref || condition);
@@ -178,7 +179,7 @@ void ArmorScreen::render(int xm, int ym, float a) {
     t.addOffset(0, 0, -500);
 	guiBackground->draw(t, 0, 0);
     t.addOffset(0, 0, 500);
-	glEnable2(GL_ALPHA_TEST);
+	GuiRenderContext::setAlphaTestState(true);
 
 	// Buttons (Left side + crafting)
 	super::render(xm, ym, a);
@@ -186,7 +187,7 @@ void ArmorScreen::render(int xm, int ym, float a) {
 	handleRenderPane(inventoryPane, t, xm, ym, a);
 
 	t.colorABGR(0xffffffff);
-	glColor4f2(1, 1, 1, 1);
+	GuiRenderContext::setColor(1, 1, 1, 1);
 
 	t.addOffset(0, 0, -490);
 	guiPlayerBg->draw(t, (float)guiPlayerBgRect.x, (float)guiPlayerBgRect.y);
@@ -196,7 +197,7 @@ void ArmorScreen::render(int xm, int ym, float a) {
 	for (int i = 0; i < NUM_ARMORBUTTONS; ++i) {
 		drawSlotItemAt(t, i, player->getArmor(i), armorButtons[i]->x, armorButtons[i]->y);
 	}
-	glDisable2(GL_ALPHA_TEST);
+	GuiRenderContext::setAlphaTestState(false);
 }
 
 void ArmorScreen::buttonClicked(Button* button) {
@@ -283,9 +284,9 @@ void ArmorScreen::drawSlotItemAt( Tesselator& t, int slot, const ItemInstance* i
 
 	if (item && !item->isNull()) {
 		ItemRenderer::renderGuiItem(minecraft->font, minecraft->textures, item, xx + 2, yy, true);
-        glDisable2(GL_TEXTURE_2D);
+        GuiRenderContext::setTexture2DState(false);
         ItemRenderer::renderGuiItemDecorations(item, xx + 2, yy + 3);
-        glEnable2(GL_TEXTURE_2D);
+        GuiRenderContext::setTexture2DState(true);
 		//minecraft->gui.renderSlotText(item, xx + 3, yy + 3, true, true);
 	} else {
         minecraft->textures->loadAndBindTexture("gui/items.png");
@@ -318,7 +319,7 @@ void ArmorScreen::renderPlayer(float xo, float yo) {
 	RenderBackend::scaleModel(-ss, ss, ss);
 
 	RenderBackend::rotateModel(180, 0, 0, 1);
-	//glDisable(GL_DEPTH_TEST);
+	//GuiRenderContext::setDepthState(false, true);
 
 	Player* player = (Player*) minecraft->player;
 	float oybr = player->yBodyRot;
@@ -361,7 +362,7 @@ void ArmorScreen::renderPlayer(float xo, float yo) {
 	player->walkAnimSpeed = oldWAS;
 	player->walkAnimSpeedO = oldWASO;
 
-	//glEnable(GL_DEPTH_TEST);
+	//GuiRenderContext::setDepthState(true, true);
 	// Pop GL and player state
 	player->yBodyRot = oybr;
 	player->yRot = oyr;

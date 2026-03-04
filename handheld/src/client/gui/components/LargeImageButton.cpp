@@ -5,6 +5,7 @@
 #include "../../../platform/log.h"
 #include "../../../util/Mth.h"
 #include "../../renderer/Textures.h"
+#include "../GuiRenderContext.h"
 
 
 LargeImageButton::LargeImageButton(int id, const std::string& msg)
@@ -32,7 +33,7 @@ void LargeImageButton::render(Minecraft* minecraft, int xm, int ym) {
 	Font* font = minecraft->font;
 
 	//minecraft->textures->loadAndBindTexture("gui/gui.png");
-	glColor4f2(1, 1, 1, 1);
+	GuiRenderContext::setColor(1, 1, 1, 1);
 	bool hovered = active && (minecraft->useTouchscreen()? (_currentlyDown && xm >= x && ym >= y && xm < x + width && ym < y + height) : false);
 
 	//printf("ButtonId: %d - Hovered? %d (cause: %d, %d, %d, %d, <> %d, %d)\n", id, hovered, x, y, x+w, y+h, xm, ym);

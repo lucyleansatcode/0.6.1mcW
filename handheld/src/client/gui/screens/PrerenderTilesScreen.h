@@ -75,11 +75,11 @@ public:
 		static Stopwatch w;
 		w.start();
 
-		glDisable2(GL_DEPTH_TEST);
+		GuiRenderContext::setDepthState(false, true);
 		fill(0, 0, width, height, 0xffff00ff);
 		//fill(0, 0, width, height, 0xff333333);
-		glColor4f2(1, 1, 1, 1);
-		glEnable2(GL_BLEND);
+		GuiRenderContext::setColor(1, 1, 1, 1);
+		GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 
 		LOGI("--------------------\n");
 		/*int j = 0;
@@ -95,9 +95,9 @@ public:
 
 			//Tesselator::instance.color(0xffffffff);
 			//minecraft->textures->loadAndBindTexture("gui/gui2.png");
-			//glColor4f2(0.2f, 0.5f, 0.2f, 1);
+			//GuiRenderContext::setColor(0.2f, 0.5f, 0.2f, 1);
 			//blit(x, y, 4 + 20 * (i%9), 4, 16, 16, 15, 15);
-			//glColor4f2(1, 1, 1, 1);
+			//GuiRenderContext::setColor(1, 1, 1, 1);
 
 			if (item->id < 256 && TileRenderer::canRender(Tile::tiles[item->id]->getRenderShape())) {
 				LOGI("0, %d, %d, %d, 0\n", j, item->id, item->getAuxValue());
@@ -125,9 +125,8 @@ public:
 		}
 		//@todo: blit out something famous here
 
-		//glRotatef2(-180, 1, 0, 0);
-		glEnable2(GL_DEPTH_TEST);
-		glDisable2(GL_BLEND);
+		GuiRenderContext::setDepthState(true, true);
+		GuiRenderContext::setBlendState(false, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 
 		w.stop();
 		w.printEvery(100, "render-blocksel");

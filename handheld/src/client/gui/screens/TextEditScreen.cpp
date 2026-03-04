@@ -10,6 +10,7 @@
 #include "../components/Button.h"
 #include "../../../network/Packet.h"
 #include "../../../network/RakNetInstance.h"
+#include "../GuiRenderContext.h"
 TextEditScreen::TextEditScreen( SignTileEntity* signEntity )
  : sign(signEntity), isShowingKeyboard(false), frame(0), line(0), btnClose(1, "") {
 
@@ -49,11 +50,11 @@ bool TextEditScreen::handleBackEvent( bool isDown ) {
 }
 
 void TextEditScreen::render( int xm, int ym, float a ) {
-	glDepthMask(GL_FALSE);
+	GuiRenderContext::setDepthState(true, false);
 	renderBackground();
 	RenderBackend::pushModelMatrix();
-	glDepthMask(GL_TRUE);
-	glDisable(GL_CULL_FACE);
+	GuiRenderContext::setDepthState(true, true);
+	GuiRenderContext::setCullState(false);
 	RenderBackend::loadModelIdentity();
 	Tesselator& t = Tesselator::instance;
 
@@ -62,7 +63,7 @@ void TextEditScreen::render( int xm, int ym, float a ) {
 	RenderBackend::setOrtho(0.0f, (float)minecraft->width, (float)minecraft->height, 0, -1, 1);
 	
 	minecraft->textures->loadAndBindTexture("item/sign.png");
-    glColor4f2(1, 1, 1, 1);
+    GuiRenderContext::setColor(1, 1, 1, 1);
 
 	static float minUV[] = {0.03126f, 0.06249f};
     static float maxUV[] = {0.39063f, 0.4374f};
@@ -96,10 +97,10 @@ void TextEditScreen::render( int xm, int ym, float a ) {
 	//font->draw("Hej", minecraft->width / 2, 100, 0xFFFFFFFF, false);
 	
 	RenderBackend::popModelMatrix();
-	glEnable(GL_CULL_FACE);
+	GuiRenderContext::setCullState(true);
 	RenderBackend::popProjectionMatrix();
 
-	//glEnable(GL_DEPTH_TEST);
+	//GuiRenderContext::setDepthState(true, true);
 	super::render(xm, ym, a);
 }
 

@@ -286,12 +286,15 @@ LDFLAGS:=-L/opt/vc/lib/ -lGLESv1_CM -lEGL -lbcm_host -lpng -lSDL -L. libRakNet_s
 #
 # Targets
 #
-all: $(MODULE)
+all: check-no-gl-in-gui $(MODULE)
 
 -include $(DEPS)
 
 release:
 	make "BUILD=release"
+
+check-no-gl-in-gui:
+	python3 ../../../tools/check_no_gl_in_gui.py
 
 #$(CC) -MM $(CFLAGS) $*.cpp > $*.d
 

@@ -7,6 +7,7 @@
 #include "../../renderer/Textures.h"
 #include "../../../world/item/ItemInstance.h"
 #include "../../../world/entity/player/Inventory.h"
+#include "../GuiRenderContext.h"
 
 namespace Touch {
 
@@ -56,16 +57,15 @@ void InventoryPane::renderBatch( std::vector<GridItem>& items, float alpha )
 	//fill(bg.x, bg.y, bg.w, bg.h, 0xff333333);
 	fill((float)(bbox.x-fillMarginX-1), (float)(bbox.y-fillMarginY), (float)(bbox.x + bbox.w + fillMarginX+1), (float)(bbox.y + bbox.h + fillMarginY), 0xff333333);
 	//fill(0.0f, (float)(bbox.y-fillMarginY), 400.0f, (float)(bbox.y + bbox.h + fillMarginY), 0xff333333);//(float)(bbox.x-fillMarginX), (float)(bbox.y-fillMarginY), (float)(bbox.x + bbox.w + fillMarginX), (float)(bbox.y + bbox.h + fillMarginY), 0xff333333);
-	glEnable2(GL_BLEND);
-	glDisable2(GL_ALPHA_TEST);
+	GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
+	GuiRenderContext::setAlphaTestState(false);
 	std::vector<const ItemInstance*> inventoryItems = screen->getItems(this);
 
-	glEnable2(GL_SCISSOR_TEST);
-	unsigned int x = (unsigned int)(screenScale * bbox.x);
+		unsigned int x = (unsigned int)(screenScale * bbox.x);
 	unsigned int y = mc->height - (unsigned int)(screenScale * (bbox.y + bbox.h));
 	unsigned int w = (unsigned int)(screenScale * bbox.w);
 	unsigned int h = (unsigned int)(screenScale * bbox.h);
-	glScissor(x, y, w, h);
+	GuiRenderContext::setScissorState(true, x, y, w, h);
 
 	Tesselator& t = Tesselator::instance;
 
@@ -113,13 +113,13 @@ void InventoryPane::renderBatch( std::vector<GridItem>& items, float alpha )
 	t.endOverrideAndDraw();
 
 	if (marked) {
-		glDisable2(GL_TEXTURE_2D);
+		GuiRenderContext::setTexture2DState(false);
 		const float yy0 = myy - 5.0f;
 		const float yy1 = yy0 + 2;
 		fill(mxx, yy0, mxx + 16.0f, yy1, 0xff606060);
 		fill(mxx, yy0, mxx + markerShare * 16.0f, yy1, markerType==1?0xff00ff00:0xff476543);
-		glEnable2(GL_BLEND);
-		glEnable2(GL_TEXTURE_2D);
+		GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
+		GuiRenderContext::setTexture2DState(true);
 	}
 
 
@@ -141,7 +141,7 @@ void InventoryPane::renderBatch( std::vector<GridItem>& items, float alpha )
 			mc->gui.renderSlotText(citem, tx, ty, true, true);
 		}
 		t.resetScale();
-		glEnable2(GL_BLEND);
+		GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 		t.endOverrideAndDraw();
 	}
 
@@ -157,11 +157,11 @@ void InventoryPane::renderBatch( std::vector<GridItem>& items, float alpha )
 			}
 		}
 
-		glDisable2(GL_TEXTURE_2D);
+		GuiRenderContext::setTexture2DState(false);
 		t.endOverrideAndDraw();
-		glEnable2(GL_TEXTURE_2D);
+		GuiRenderContext::setTexture2DState(true);
 	}
-	glDisable2(GL_SCISSOR_TEST);
+	GuiRenderContext::setScissorState(false, 0, 0, 0, 0);
 
 	//fillGradient(bbox.x - 1, bbox.y, bbox.x + bbox.w + 1, bbox.y + 20, 0x99000000, 0x00000000);
 	//fillGradient(bbox.x - 1, bbox.y + bbox.h - 20, bbox.x + bbox.w + 1, bbox.y + bbox.h, 0x00000000, 0x99000000);

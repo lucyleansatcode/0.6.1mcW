@@ -77,15 +77,13 @@ void IngameBlockSelectionScreen::renderSlots()
 	//static Stopwatch w;
 	//w.start();
 
-	glColor4f2(1, 1, 1, 1);
+	GuiRenderContext::setColor(1, 1, 1, 1);
 
 	blitOffset = -90;
 
-	//glEnable2(GL_RESCALE_NORMAL);
-	//glPushMatrix2();
-	//glRotatef2(180, 1, 0, 0);
+	//GuiRenderContext::pushMatrix();
 	//Lighting::turnOn();
-	//glPopMatrix2();
+	//GuiRenderContext::popMatrix();
 
 	minecraft->textures->loadAndBindTexture("gui/gui.png");
 	for (int r = 0; r < InventoryRows; r++)
@@ -123,7 +121,6 @@ void IngameBlockSelectionScreen::renderSlots()
 	//w.stop();
 	//w.printEvery(1000, "render-blocksel");
 
-	//glDisable2(GL_RESCALE_NORMAL);
 	//Lighting::turnOn();
 }
 

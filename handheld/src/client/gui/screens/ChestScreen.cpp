@@ -19,6 +19,7 @@
 #include "../../../world/level/tile/entity/ChestTileEntity.h"
 #include "../../../world/inventory/ContainerMenu.h"
 #include "../../../util/Mth.h"
+#include "../GuiRenderContext.h"
 
 //static NinePatchLayer* guiPaneFrame = NULL;
 
@@ -248,7 +249,7 @@ void ChestScreen::render(int xm, int ym, float a) {
 
 	Tesselator& t = Tesselator::instance;
 	guiBackground->draw(t, 0, 0);
-	glEnable2(GL_ALPHA_TEST);
+	GuiRenderContext::setAlphaTestState(true);
 
 	// Buttons (Left side + crafting)
 	super::render(xm, ym, a);
@@ -262,14 +263,13 @@ void ChestScreen::render(int xm, int ym, float a) {
 	float MaxTime = 0.3f;
 	std::vector<FlyingItem> flyingToSave;
 
-	glEnable2(GL_BLEND);
-	glColor4f(1, 1, 1, 0.2f);
+	GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
+	GuiRenderContext::setColor(1, 1, 1, 0.2f);
 	t.beginOverride();
 	//t.color(1.0f, 0.0f, 0.0f, 0.2f);
 	//t.noColor();
 
-	glEnable2(GL_SCISSOR_TEST);
-	//LOGI("panesBox: %d, %d - %d, %d\n", panesBbox.x, panesBbox.y, panesBbox.w, panesBbox.h);
+		//LOGI("panesBox: %d, %d - %d, %d\n", panesBbox.x, panesBbox.y, panesBbox.w, panesBbox.h);
 	minecraft->gui.setScissorRect(panesBbox);
 	for (unsigned int i = 0; i < flyingItems.size(); ++i) {
 		FlyingItem& fi = flyingItems[i];
@@ -288,12 +288,12 @@ void ChestScreen::render(int xm, int ym, float a) {
 	}
 	t.enableColor();
 	t.endOverrideAndDraw();
-	glDisable2(GL_SCISSOR_TEST);
+	GuiRenderContext::setScissorState(false, 0, 0, 0, 0);
 
 	flyingItems = flyingToSave;
 
 	t.colorABGR(0xffffffff);
-	glDisable2(GL_BLEND);
+	GuiRenderContext::setBlendState(false, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 
 	minecraft->textures->loadAndBindTexture("gui/spritesheet.png");
 }

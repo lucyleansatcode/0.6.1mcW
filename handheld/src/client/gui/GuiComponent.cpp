@@ -62,12 +62,12 @@ void GuiComponent::fill( float x0, float y0, float x1, float y1, int col )
 	//float r = ((col >> 16) & 0xff) / 255.0f;
 	//float g = ((col >> 8) & 0xff) / 255.0f;
 	//float b = ((col) & 0xff) / 255.0f;
-	//glColor4f2(r, g, b, a);
+	//GuiRenderContext::setColor(r, g, b, a);
 
 	Tesselator& t = Tesselator::instance;
-	GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 	GuiRenderContext::setTexture2DState(false);
-	GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 	
 	//LOGI("col: %f, %f, %f, %f\n", r, g, b, a);
 	t.begin();
@@ -96,10 +96,10 @@ void GuiComponent::fillGradient( float x0, float y0, float x1, float y1, int col
 	float g2 = ((col2 >> 8) & 0xff) / 255.0f;
 	float b2 = ((col2) & 0xff) / 255.0f;
 	GuiRenderContext::setTexture2DState(false);
-	GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 	GuiRenderContext::setAlphaTestState(false);
-	GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	GuiRenderContext::setShadeModel(GL_SMOOTH);
+	GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
+	GuiRenderContext::setShadeModel(GuiRenderContext::ShadeSmooth);
 
 	Tesselator& t = Tesselator::instance;
 	t.begin();
@@ -128,10 +128,10 @@ void GuiComponent::fillHorizontalGradient( float x0, float y0, float x1, float y
 	float g2 = ((col2 >> 8) & 0xff) / 255.0f;
 	float b2 = ((col2) & 0xff) / 255.0f;
 	GuiRenderContext::setTexture2DState(false);
-	GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 	GuiRenderContext::setAlphaTestState(false);
-	GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	GuiRenderContext::setShadeModel(GL_SMOOTH);
+	GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
+	GuiRenderContext::setShadeModel(GuiRenderContext::ShadeSmooth);
 
 	Tesselator& t = Tesselator::instance;
 	t.begin();

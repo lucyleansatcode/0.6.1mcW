@@ -20,6 +20,7 @@
 #include "../../../world/inventory/FurnaceMenu.h"
 #include "../../../network/packet/ContainerSetSlotPacket.h"
 #include "../../../network/RakNetInstance.h"
+#include "../GuiRenderContext.h"
 
 static int heldMs = -1;
 static int percent = -1;
@@ -229,7 +230,7 @@ void FurnaceScreen::render(int xm, int ym, float a) {
 
 	Tesselator& t = Tesselator::instance;
 	guiBackground->draw(t, 0, 0);
-	glEnable2(GL_ALPHA_TEST);
+	GuiRenderContext::setAlphaTestState(true);
 
 	// Buttons (Left side + crafting)
 	super::render(xm, ym, a);
@@ -246,13 +247,13 @@ void FurnaceScreen::render(int xm, int ym, float a) {
 
 	if (!burnResult.isNull()) {
 		if (!resultSlotItem || resultSlotItem->isNull()) {
-			glEnable2(GL_BLEND);
+			GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 			t.beginOverride();
 			t.colorABGR(0x33ffffff);
 			t.noColor();
 			ItemRenderer::renderGuiItem(minecraft->font, minecraft->textures, &burnResult, (float)(btnResult.x + 7), (float)(btnResult.y + 8), true);
 			t.endOverrideAndDraw();
-			glDisable2(GL_BLEND);
+			GuiRenderContext::setBlendState(false, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 		}
 		minecraft->font->drawWordWrap(currentItemDesc, (float)btnResult.x - 24, (float)(btnResult.y + btnResult.height + 6), descWidth, rgbActive);
 	}

@@ -4,6 +4,7 @@
 #include "../../Font.h"
 #include "../../../Minecraft.h"
 #include "../../../renderer/Textures.h"
+#include "../../GuiRenderContext.h"
 
 namespace Touch {
 
@@ -41,9 +42,9 @@ void AvailableGamesList::renderItem( int i, int x, int y, int h, Tesselator& t )
 	if (s.isSpecial) {
 		xx1 += 50;
 
-		glEnable2(GL_TEXTURE_2D);
-        glColor4f2(1,1,1,1);
-        glEnable2(GL_BLEND);
+		GuiRenderContext::setTexture2DState(true);
+        GuiRenderContext::setColor(1,1,1,1);
+        GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 		minecraft->textures->loadAndBindTexture("gui/badge/minecon140.png");
 		blit(xx2, y + 6, 0, 0, 37, 8, 140, 240);
 	}

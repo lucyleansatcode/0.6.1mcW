@@ -6,14 +6,18 @@ namespace GuiRenderContext {
 typedef unsigned int RenderId;
 typedef unsigned int RenderState;
 
+static const RenderState BlendZero = 0x0000;
 static const RenderState BlendSrcAlpha = 0x0302;
 static const RenderState BlendOneMinusSrcAlpha = 0x0303;
+static const RenderState BlendOneMinusDstColor = 0x0307;
+static const RenderState BlendOneMinusSrcColor = 0x0301;
 static const RenderState ShadeFlat = 0x1D00;
 static const RenderState ShadeSmooth = 0x1D01;
 
 void setBlendState(bool enabled, RenderState srcFactor, RenderState dstFactor);
 void setAlphaTestState(bool enabled);
 void setDepthState(bool enabled, bool writeMask);
+void setCullState(bool enabled);
 void setScissorState(bool enabled, int x, int y, int width, int height);
 
 void setTexture2DState(bool enabled);

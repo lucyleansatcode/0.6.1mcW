@@ -173,7 +173,7 @@ void RolledSelectionListH::render( int xm, int ym, float a )
 	//LOGI("x: %f\n", xo);
 
 	minecraft->textures->loadAndBindTexture("gui/background.png");
-	glColor4f2(1.0f, 1, 1, 1);
+	GuiRenderContext::setColor(1.0f, 1, 1, 1);
 	float s = 32;
 	t.begin();
 	t.color(0x202020);
@@ -206,7 +206,7 @@ void RolledSelectionListH::render( int xm, int ym, float a )
 		if (renderSelection && isSelectedItem(i)) {
 			float y0 = height / 2.0f - HalfHeight - 4; //@kindle-res:+2
 			float y1 = height / 2.0f + HalfHeight - 4; //@kindle-res:-6
-			glColor4f2(1, 1, 1, 1);
+			GuiRenderContext::setColor(1, 1, 1, 1);
 			GuiRenderContext::setTexture2DState(false);
 
 			int ew = 0;
@@ -241,10 +241,8 @@ void RolledSelectionListH::render( int xm, int ym, float a )
 	if (_renderBottomBorder)
 		renderHoleBackground(y1, (float)height, 255, 255);
 
-	//glEnable2(GL_BLEND);
-	//glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//glDisable2(GL_ALPHA_TEST);
-	//glShadeModel2(GL_SMOOTH);
+	//GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
+	//GuiRenderContext::setAlphaTestState(false);
 
 	//GuiRenderContext::setTexture2DState(false);
 
@@ -272,16 +270,15 @@ void RolledSelectionListH::render( int xm, int ym, float a )
 	//GuiRenderContext::setTexture2DState(true);
 	GuiRenderContext::setDepthState(true, true);
 
-	//glShadeModel2(GL_FLAT);
-	//glEnable2(GL_ALPHA_TEST);
-	//glDisable2(GL_BLEND);
+	//GuiRenderContext::setAlphaTestState(true);
+	//GuiRenderContext::setBlendState(false, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 }
 
 void RolledSelectionListH::renderHoleBackground( /*float x0, float x1,*/ float y0, float y1, int a0, int a1 )
 {
 	Tesselator& t = Tesselator::instance;
 	minecraft->textures->loadAndBindTexture("gui/background.png");
-	glColor4f2(1.0f, 1, 1, 1);
+	GuiRenderContext::setColor(1.0f, 1, 1, 1);
 	float s = 32;
 	t.begin();
 	t.color(0x505050, a1);

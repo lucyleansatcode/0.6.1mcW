@@ -161,7 +161,7 @@ void ScrolledSelectionList::render( int xm, int ym, float a )
 		if (renderSelection && isSelectedItem(i)) {
 			float x0 = width / 2.0f - (92 + 16 + 2);
 			float x1 = width / 2.0f + (92 + 16 + 2);
-			glColor4f2(1, 1, 1, 1);
+			GuiRenderContext::setColor(1, 1, 1, 1);
 			GuiRenderContext::setTexture2DState(false);
 			t.begin();
 			t.color(0x808080);
@@ -267,7 +267,7 @@ void ScrolledSelectionList::renderHoleBackground( float y0, float y1, int a0, in
 {
 	Tesselator& t = Tesselator::instance;
 	minecraft->textures->loadAndBindTexture("gui/background.png");
-	glColor4f2(1.0f, 1, 1, 1);
+	GuiRenderContext::setColor(1.0f, 1, 1, 1);
 	float s = 32;
 	t.begin();
 	t.color(0x505050, a1);
@@ -283,7 +283,7 @@ void ScrolledSelectionList::renderDirtBackground()
 {
 	Tesselator& t = Tesselator::instance;
 	minecraft->textures->loadAndBindTexture("gui/background.png");
-	glColor4f2(1.0f, 1, 1, 1);
+	GuiRenderContext::setColor(1.0f, 1, 1, 1);
 	float s = 32;
 	t.begin();
 	t.color(0x202020);

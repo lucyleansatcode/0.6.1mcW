@@ -109,7 +109,7 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
 	#ifdef APPLE_DEMO_PROMOTION
 		font->drawShadow("Demo version", 2, 0 + 2, 0xffffffff);
 	#endif /*APPLE_DEMO_PROMOTION*/
-	GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 	unsigned int max = 10;
     bool isChatting = false;
 	renderChatMessages(screenHeight, max, isChatting, font);
@@ -124,7 +124,7 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
 //        GuiRenderContext::popMatrix();
 //
 //        GuiRenderContext::setAlphaTestState(true);
-    GuiRenderContext::setBlendState(false, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    GuiRenderContext::setBlendState(false, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 	GuiRenderContext::setAlphaTestState(true);
 	GuiRenderContext::restoreGuiDefaults();
 }
@@ -276,7 +276,7 @@ void Gui::renderVignette(float br, int w, int h) {
 
 	GuiRenderContext::setDepthState(false, true);
 	GuiRenderContext::setDepthState(false, false);
-	GuiRenderContext::setBlendState(true, GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
+	GuiRenderContext::setBlendState(true, GuiRenderContext::BlendZero, GuiRenderContext::BlendOneMinusSrcColor);
 	GuiRenderContext::setColor(tbr, tbr, tbr, 1);
 	minecraft->textures->loadAndBindTexture("misc/vignette.png");
 
@@ -290,7 +290,7 @@ void Gui::renderVignette(float br, int w, int h) {
 	GuiRenderContext::setDepthState(false, true);
 	GuiRenderContext::setDepthState(true, true);
 	GuiRenderContext::setColor(1, 1, 1, 1);
-	GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 	GuiRenderContext::restoreGuiDefaults();
 }
 
@@ -508,10 +508,10 @@ void Gui::renderProgressIndicator( const bool isTouchInterface, const int screen
 	bool itemInUse = currentItem != NULL ? currentItem->getItem() == minecraft->player->getUseItem()->getItem() : false;
 	if (!isTouchInterface || minecraft->options.isJoyTouchArea || (bowEquipped && itemInUse)) {
 		minecraft->textures->loadAndBindTexture("gui/icons.png");
-		GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		GuiRenderContext::setBlendState(true, GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_SRC_COLOR);
+		GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
+		GuiRenderContext::setBlendState(true, GuiRenderContext::BlendOneMinusDstColor, GuiRenderContext::BlendOneMinusSrcColor);
 		blit(screenWidth/2 - 8, screenHeight/2 - 8, 0, 0, 16, 16);
-		GuiRenderContext::setBlendState(false, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		GuiRenderContext::setBlendState(false, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 	} else if(!bowEquipped) {
 		const float tprogress = minecraft->gameMode->destroyProgress;
 		const float alpha = Mth::clamp(minecraft->inputHolder->alpha, 0.0f, 1.0f);
@@ -519,8 +519,8 @@ void Gui::renderProgressIndicator( const bool isTouchInterface, const int screen
 
 		if (tprogress <= 0 && minecraft->inputHolder->alpha >= 0) {
 			GuiRenderContext::setTexture2DState(false);
-			GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
+			GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 			if (minecraft->hitResult.isHit())
 				GuiRenderContext::setColor(1, 1, 1, 0.8f * alpha);
 			else
@@ -534,7 +534,7 @@ void Gui::renderProgressIndicator( const bool isTouchInterface, const int screen
 			GuiRenderContext::translate(-x, -y, 0);
 
 			GuiRenderContext::setTexture2DState(true);
-			GuiRenderContext::setBlendState(false, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			GuiRenderContext::setBlendState(false, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 		} else if (tprogress > 0) {
 			const float oProgress = minecraft->gameMode->oDestroyProgress;
 			const float progress = 0.5f * (oProgress + (tprogress - oProgress) * a);
@@ -544,8 +544,8 @@ void Gui::renderProgressIndicator( const bool isTouchInterface, const int screen
 
 			GuiRenderContext::setTexture2DState(false);
 			GuiRenderContext::setColor(1, 1, 1, 0.8f * alpha);
-			GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
+			GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 
 			const float x = InvGuiScale * minecraft->inputHolder->mousex;
 			const float y = InvGuiScale * minecraft->inputHolder->mousey;
@@ -553,13 +553,12 @@ void Gui::renderProgressIndicator( const bool isTouchInterface, const int screen
 			GuiRenderContext::translate(x, y, 0);
 			drawArrayVT(rcFeedbackOuter.vboId, rcFeedbackOuter.vertexCount, 24);
 			GuiRenderContext::scale(0.5f + progress, 0.5f + progress, 1);
-			//glDisable2(GL_CULL_FACE);
 			GuiRenderContext::setColor(1, 1, 1, 1);
-			GuiRenderContext::setBlendState(true, GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_SRC_COLOR);
+			GuiRenderContext::setBlendState(true, GuiRenderContext::BlendOneMinusDstColor, GuiRenderContext::BlendOneMinusSrcColor);
 			drawArrayVT(rcFeedbackInner.vboId, rcFeedbackInner.vertexCount, 24, GL_TRIANGLE_FAN);
 			GuiRenderContext::popMatrix();
 
-			GuiRenderContext::setBlendState(false, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			GuiRenderContext::setBlendState(false, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 			GuiRenderContext::setTexture2DState(true);
 
 			//w.stop();
@@ -678,14 +677,14 @@ void Gui::renderChatMessages( const int screenHeight, unsigned int max, bool isC
 	//            isChatting = true;
 	//        }
 	//
-	//        GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//        GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//        GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
+	//        GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 	//        GuiRenderContext::setAlphaTestState(false);
 	//
 	//        GuiRenderContext::pushMatrix();
-	//        glTranslatef2(0, screenHeight - 48, 0);
-	//        // glScalef2(1.0f / ssc.scale, 1.0f / ssc.scale, 1);
-	GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//        GuiRenderContext::translate(0, screenHeight - 48, 0);
+	//        // GuiRenderContext::scale(1.0f / ssc.scale, 1.0f / ssc.scale, 1);
+	GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 	int baseY = screenHeight - 48;
 	for (unsigned int i = 0; i < guiMessages.size() && i < max; i++) {
 		if (guiMessages.at(i).ticks < 20 * 10 || isChatting) {
@@ -703,7 +702,7 @@ void Gui::renderChatMessages( const int screenHeight, unsigned int max, bool isC
 				const float y = (float)(baseY - i * 9);
 				std::string msg = guiMessages.at(i).message;
 				this->fill(x, y - 1, x + MAX_MESSAGE_WIDTH, y + 8, (alpha / 2) << 24);
-				GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+				GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 
 				font->drawShadow(msg, x, y, 0xffffff + (alpha << 24));
 				GuiRenderContext::restoreGuiDefaults();

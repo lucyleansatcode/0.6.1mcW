@@ -21,6 +21,7 @@
 #include "SimpleChooseLevelScreen.h"
 #include "../../renderer/Textures.h"
 #include "../../../SharedConstants.h"
+#include "../GuiRenderContext.h"
 
 // Some kind of default settings, might be overridden in ::init
 StartMenuScreen::StartMenuScreen()
@@ -165,7 +166,7 @@ void StartMenuScreen::render( int xm, int ym, float a )
 
 		// Render title text
 		Tesselator& t = Tesselator::instance;
-		glColor4f2(1, 1, 1, 1);
+		GuiRenderContext::setColor(1, 1, 1, 1);
 		t.begin();
 		t.vertexUV(x-wh, y+h, blitOffset, 0, 1);
 		t.vertexUV(x+wh, y+h, blitOffset, 1, 1);

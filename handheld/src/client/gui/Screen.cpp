@@ -117,7 +117,6 @@ void Screen::renderBackground( int vo )
 
 void Screen::renderDirtBackground( int vo )
 {
-	//glDisable2(GL_LIGHTING);
 	GuiRenderContext::setFogState(false);
 	Tesselator& t = Tesselator::instance;
 	minecraft->textures->loadAndBindTexture("gui/background.png");
