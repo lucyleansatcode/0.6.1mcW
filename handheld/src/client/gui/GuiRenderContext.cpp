@@ -25,43 +25,43 @@ void setScissorState(bool enabled, int x, int y, int width, int height) {
 }
 
 void setTexture2DState(bool enabled) {
-    if (enabled) glEnable2(GL_TEXTURE_2D); else glDisable2(GL_TEXTURE_2D);
+    RenderBackend::setTextureState(enabled);
 }
 
 void setFogState(bool enabled) {
-    if (enabled) glEnable2(GL_FOG); else glDisable2(GL_FOG);
+    RenderBackend::setFogState(enabled);
 }
 
 void setColor(float r, float g, float b, float a) {
-    glColor4f2(r, g, b, a);
+    RenderBackend::setColor(r, g, b, a);
 }
 
 void setShadeModel(RenderState mode) {
-    glShadeModel2(mode);
+    RenderBackend::setShadeModel(mode);
 }
 
 void translate(float x, float y, float z) {
-    glTranslatef2(x, y, z);
+    RenderBackend::translateModel(x, y, z);
 }
 
 void scale(float x, float y, float z) {
-    glScalef2(x, y, z);
+    RenderBackend::scaleModel(x, y, z);
 }
 
 void pushMatrix() {
-    glPushMatrix2();
+    RenderBackend::pushModelMatrix();
 }
 
 void popMatrix() {
-    glPopMatrix2();
+    RenderBackend::popModelMatrix();
 }
 
 void genBuffers(int count, RenderId* outIds) {
-    glGenBuffers2(count, outIds);
+    RenderBackend::genBuffers(count, outIds);
 }
 
 void deleteBuffers(int count, const RenderId* ids) {
-    glDeleteBuffers(count, ids);
+    RenderBackend::deleteBuffers(count, ids);
 }
 
 void restoreGuiDefaults() {

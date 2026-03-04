@@ -21,6 +21,7 @@
 #include "../../AppPlatform.h"
 #include "../../util/PerfTimer.h"
 #include "Textures.h"
+#include "RenderBackend.h"
 #include "tileentity/TileEntityRenderDispatcher.h"
 #include "../particle/BreakingItemParticle.h"
 #include "../../util/MemoryBudget.h"
@@ -354,15 +355,15 @@ int LevelRenderer::render( Mob* player, int layer, float alpha )
 			to = to * 2;
 			if (to > chunksLength) to = chunksLength;
 
-			glDisable2(GL_TEXTURE_2D);
+			RenderBackend::setTextureState(false);
 			glDisable2(GL_LIGHTING);
-			glDisable2(GL_ALPHA_TEST);
-			glDisable2(GL_FOG);
+			RenderBackend::setAlphaTestState(false);
+			RenderBackend::setFogState(false);
 
 			glColorMask(false, false, false, false);
-			glDepthMask(false);
+			RenderBackend::setDepthWriteMask(false);
 			//checkQueryResults(from, to);
-			glPushMatrix2();
+			RenderBackend::pushModelMatrix();
 			float xo = 0;
 			float yo = 0;
 			float zo = 0;
@@ -390,7 +391,7 @@ int LevelRenderer::render( Mob* player, int layer, float alpha )
 						float zdd = zt - zo;
 
 						if (xdd != 0 || ydd != 0 || zdd != 0) {
-							glTranslatef2(xdd, ydd, zdd);
+							RenderBackend::translateModel(xdd, ydd, zdd);
 							xo += xdd;
 							yo += ydd;
 							zo += zdd;
@@ -401,12 +402,12 @@ int LevelRenderer::render( Mob* player, int layer, float alpha )
 					}
 				}
 			}
-			glPopMatrix2();
+			RenderBackend::popModelMatrix();
 			glColorMask(true, true, true, true);
-			glDepthMask(true);
-			glEnable2(GL_TEXTURE_2D);
-			glEnable2(GL_ALPHA_TEST);
-			glEnable2(GL_FOG);
+			RenderBackend::setDepthWriteMask(true);
+			RenderBackend::setTextureState(true);
+			RenderBackend::setAlphaTestState(true);
+			RenderBackend::setFogState(true);
 
 			count += renderChunks(from, to, layer, alpha);
 
@@ -431,9 +432,9 @@ void LevelRenderer::renderDebug(const AABB& b, float a) const {
 	float u0 = 0, v0 = 0;
 	float u1 = 1, v1 = 1;
 
-	glEnable2(GL_BLEND);
-	glBlendFunc2(GL_DST_COLOR, GL_SRC_COLOR);
-	glDisable2(GL_TEXTURE_2D);
+	RenderBackend::setBlendEnabled(true);
+	RenderBackend::setBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
+	RenderBackend::setTextureState(false);
 	glColor4f2(1, 1, 1, 1);
 
 	textures->loadAndBindTexture("terrain.png");
@@ -483,8 +484,8 @@ void LevelRenderer::renderDebug(const AABB& b, float a) const {
 	t.offset(0, 0, 0);
 	t.draw();
 
-	glEnable2(GL_TEXTURE_2D);
-	glDisable2(GL_BLEND);
+	RenderBackend::setTextureState(true);
+	RenderBackend::setBlendEnabled(false);
 }
 
 void LevelRenderer::render(const AABB& b) const
@@ -777,15 +778,15 @@ void LevelRenderer::renderHit( Player* player, const HitResult& h, int mode, /*I
 	if (mode == 0) {
 		if (destroyProgress > 0) {
 			Tesselator& t = Tesselator::instance;
-			glEnable2(GL_BLEND);
-			glBlendFunc2(GL_DST_COLOR, GL_SRC_COLOR);
+			RenderBackend::setBlendEnabled(true);
+			RenderBackend::setBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
 
 			textures->loadAndBindTexture("terrain.png");
-			glPushMatrix2();
+			RenderBackend::pushModelMatrix();
 
 			int tileId = level->getTile(h.x, h.y, h.z);
 			Tile* tile = tileId > 0 ? Tile::tiles[tileId] : NULL;
-			//glDisable2(GL_ALPHA_TEST);
+			//RenderBackend::setAlphaTestState(false);
 
 			glPolygonOffset(-3.0f, -3.0f);
 			glEnable2(GL_POLYGON_OFFSET_FILL);
@@ -807,15 +808,15 @@ void LevelRenderer::renderHit( Player* player, const HitResult& h, int mode, /*I
 			t.offset(0, 0, 0);
 			glPolygonOffset(0.0f, 0.0f);
 			glDisable2(GL_POLYGON_OFFSET_FILL);
-			//glDisable2(GL_ALPHA_TEST);
-			glDisable2(GL_BLEND);
+			//RenderBackend::setAlphaTestState(false);
+			RenderBackend::setBlendEnabled(false);
 
-			glDepthMask(true);
-			glPopMatrix2();
+			RenderBackend::setDepthWriteMask(true);
+			RenderBackend::popModelMatrix();
 		}
 	}
 	//else if (inventoryItem != NULL) {
-	//          glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//          RenderBackend::setBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	//          float br = ((float) (util.Mth::sin(System.currentTimeMillis() / 100.0f)) * 0.2f + 0.8f);
 	//          glColor4f2(br, br, br, ((float) (util.Mth::sin(System.currentTimeMillis() / 200.0f)) * 0.2f + 0.5f));
 
@@ -840,12 +841,12 @@ void LevelRenderer::renderHit( Player* player, const HitResult& h, int mode, /*I
 void LevelRenderer::renderHitOutline( Player* player, const HitResult& h, int mode, /*ItemInstance*/void* inventoryItem, float a )
 {
 	if (mode == 0 && h.type == TILE) {
-		glEnable2(GL_BLEND);
-		glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		RenderBackend::setBlendEnabled(true);
+		RenderBackend::setBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glColor4f2(0, 0, 0, 0.4f);
 		glLineWidth(1.0f);
-		glDisable2(GL_TEXTURE_2D);
-		glDepthMask(false);
+		RenderBackend::setTextureState(false);
+		RenderBackend::setDepthWriteMask(false);
 		float ss = 0.002f;
 		int tileId = level->getTile(h.x, h.y, h.z);
 
@@ -856,9 +857,9 @@ void LevelRenderer::renderHitOutline( Player* player, const HitResult& h, int mo
 			float zo = player->zOld + (player->z - player->zOld) * a;
 			render(Tile::tiles[tileId]->getTileAABB(level, h.x, h.y, h.z).grow(ss, ss, ss).cloneMove(-xo, -yo, -zo));
 		}
-		glDepthMask(true);
-		glEnable2(GL_TEXTURE_2D);
-		glDisable2(GL_BLEND);
+		RenderBackend::setDepthWriteMask(true);
+		RenderBackend::setTextureState(true);
+		RenderBackend::setBlendEnabled(false);
 	}
 }
 
@@ -1016,7 +1017,7 @@ std::string LevelRenderer::gatherStats1() {
 void LevelRenderer::renderSky(float alpha) {
     if (mc->level->dimension->foggy) return;
 
-    glDisable2(GL_TEXTURE_2D);
+    RenderBackend::setTextureState(false);
     Vec3 sc = level->getSkyColor(mc->cameraTargetPlayer, alpha);
     float sr = (float) sc.x;
     float sg = (float) sc.y;
@@ -1035,19 +1036,19 @@ void LevelRenderer::renderSky(float alpha) {
 
     //Tesselator& t = Tesselator::instance;
 
-    glEnable2(GL_FOG);
+    RenderBackend::setFogState(true);
     glColor4f2(sr, sg, sb, 1.0f);
 
 #ifdef OPENGL_ES
 	drawArrayVT(skyBuffer, skyVertexCount);
 #endif
-    glEnable2(GL_TEXTURE_2D);
+    RenderBackend::setTextureState(true);
 }
 
 void LevelRenderer::renderClouds( float alpha ) {
 	//if (!mc->level->dimension->isNaturalDimension()) return;
-	glEnable2(GL_TEXTURE_2D);
-	glDisable(GL_CULL_FACE);
+	RenderBackend::setTextureState(true);
+	RenderBackend::setCullState(false);
 	float yOffs = (float) (mc->player->yOld + (mc->player->y - mc->player->yOld) * alpha);
 	int s = 32;
 	int d = 256 / s;
@@ -1056,8 +1057,8 @@ void LevelRenderer::renderClouds( float alpha ) {
 	//glBindTexture(GL_TEXTURE_2D, texturesloadTexture("/environment/clouds.png"));
 	textures->loadAndBindTexture("environment/clouds.png");
 	
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	RenderBackend::setBlendEnabled(true);
+	RenderBackend::setBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	Vec3 cc = level->getCloudColor(alpha);
 	float cr = (float) cc.x;
@@ -1090,8 +1091,8 @@ void LevelRenderer::renderClouds( float alpha ) {
 	}
 	t.endOverrideAndDraw();
 	glColor4f(1, 1, 1, 1.0f);
-	glDisable(GL_BLEND);
-	glEnable(GL_CULL_FACE);
+	RenderBackend::setBlendEnabled(false);
+	RenderBackend::setCullState(true);
 }
 
 void LevelRenderer::playSound(const std::string& name, float x, float y, float z, float volume, float pitch) {
@@ -1207,23 +1208,23 @@ void LevelRenderer::renderHitSelect( Player* player, const HitResult& h, int mod
 	if (mode == 0) {
 
 		Tesselator& t = Tesselator::instance;
-		glEnable2(GL_BLEND);
-		glDisable2(GL_TEXTURE_2D);
-		glBlendFunc2(GL_SRC_ALPHA, GL_ONE);
-		glBlendFunc2(GL_DST_COLOR, GL_SRC_COLOR);
-		glEnable2(GL_DEPTH_TEST);
+		RenderBackend::setBlendEnabled(true);
+		RenderBackend::setTextureState(false);
+		RenderBackend::setBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		RenderBackend::setBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
+		RenderBackend::setDepthTestState(true);
 
 		textures->loadAndBindTexture("terrain.png");
 		
 		int tileId = level->getTile(h.x, h.y, h.z);
 		Tile* tile = tileId > 0 ? Tile::tiles[tileId] : NULL;
-		glDisable2(GL_ALPHA_TEST);
+		RenderBackend::setAlphaTestState(false);
 
 		//LOGI("block: %d - %d (%s)\n", tileId, level->getData(h.x, h.y, h.z), tile==NULL?"null" : tile->getDescriptionId().c_str() );
 
 		const float br = 0.65f;
 		glColor4f2(br * 1.0f, br * 1.0f, br * 1.0f, br * 1.0f);
-		glPushMatrix2();
+		RenderBackend::pushModelMatrix();
 
 		//glPolygonOffset(-.3f, -.3f);
 		glPolygonOffset(-1.f, -1.f); //Implementation dependent units
@@ -1244,13 +1245,13 @@ void LevelRenderer::renderHitSelect( Player* player, const HitResult& h, int mod
 		glPolygonOffset(0.0f, 0.0f);
 
 		glDisable2(GL_POLYGON_OFFSET_FILL);
-		glEnable2(GL_TEXTURE_2D);
+		RenderBackend::setTextureState(true);
 
-		glDepthMask(true);
-		glPopMatrix2();
+		RenderBackend::setDepthWriteMask(true);
+		RenderBackend::popModelMatrix();
 
-		glEnable2(GL_ALPHA_TEST);
-		glDisable2(GL_BLEND);
+		RenderBackend::setAlphaTestState(true);
+		RenderBackend::setBlendEnabled(false);
 	}
 }
 

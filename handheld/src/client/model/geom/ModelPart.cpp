@@ -3,6 +3,7 @@
 #include "../Model.h"
 #include "../../renderer/Tesselator.h"
 #include "../../../util/Mth.h"
+#include "../../renderer/RenderBackend.h"
 
 
 ModelPart::ModelPart( const std::string& id )
@@ -46,7 +47,7 @@ void ModelPart::_init() {
 	yTexSize = 32;
 
 	vboId = 0;
-	glGenBuffers2(1, &vboId);
+	RenderBackend::genBuffers(1, &vboId);
 }
 
 void ModelPart::setModel(Model* model) {
@@ -101,13 +102,13 @@ void ModelPart::render( float scale )
 	if (!compiled) compile(scale);
 
 	if (xRot != 0 || yRot != 0 || zRot != 0) {
-		glPushMatrix2();
-		glTranslatef2(x * scale, y * scale, z * scale);
+		RenderBackend::pushModelMatrix();
+		RenderBackend::translateModel(x * scale, y * scale, z * scale);
 
 		const float c = Mth::RADDEG;
-		if (zRot != 0) glRotatef2(zRot * c, 0.0f, 0.0f, 1.0f);
-		if (yRot != 0) glRotatef2(yRot * c, 0.0f, 1.0f, 0.0f);
-		if (xRot != 0) glRotatef2(xRot * c, 1.0f, 0.0f, 0.0f);
+		if (zRot != 0) RenderBackend::rotateModel(zRot * c, 0.0f, 0.0f, 1.0f);
+		if (yRot != 0) RenderBackend::rotateModel(yRot * c, 0.0f, 1.0f, 0.0f);
+		if (xRot != 0) RenderBackend::rotateModel(xRot * c, 1.0f, 0.0f, 0.0f);
 
 		//LOGI("A");
 		draw();
@@ -117,9 +118,9 @@ void ModelPart::render( float scale )
             }
 		}
 
-		glPopMatrix2();
+		RenderBackend::popModelMatrix();
 	} else if (x != 0 || y != 0 || z != 0) {
-		glTranslatef2(x * scale, y * scale, z * scale);
+		RenderBackend::translateModel(x * scale, y * scale, z * scale);
 		//LOGI("B");
 		draw();
 		if (!children.empty()) {
@@ -128,7 +129,7 @@ void ModelPart::render( float scale )
 			}
 		}
 
-		glTranslatef2(-x * scale, -y * scale, -z * scale);
+		RenderBackend::translateModel(-x * scale, -y * scale, -z * scale);
 	} else {
 		//LOGI("C");
 		draw();
@@ -147,16 +148,16 @@ void ModelPart::renderRollable( float scale )
 	if (!visible) return;
 	if (!compiled) compile(scale);
 
-	glPushMatrix2();
-	glTranslatef2(x * scale, y * scale, z * scale);
+	RenderBackend::pushModelMatrix();
+	RenderBackend::translateModel(x * scale, y * scale, z * scale);
 
 	const float c = Mth::RADDEG;
-	if (yRot != 0) glRotatef2(yRot * c, 0.0f, 1.0f, 0.0f);
-	if (xRot != 0) glRotatef2(xRot * c, 1.0f, 0.0f, 0.0f);
-	if (zRot != 0) glRotatef2(zRot * c, 0.0f, 0.0f, 1.0f);
+	if (yRot != 0) RenderBackend::rotateModel(yRot * c, 0.0f, 1.0f, 0.0f);
+	if (xRot != 0) RenderBackend::rotateModel(xRot * c, 1.0f, 0.0f, 0.0f);
+	if (zRot != 0) RenderBackend::rotateModel(zRot * c, 0.0f, 0.0f, 1.0f);
 
 	draw();
-	glPopMatrix2();
+	RenderBackend::popModelMatrix();
 }
 
 
@@ -168,12 +169,12 @@ void ModelPart::translateTo( float scale )
 
 	if (xRot != 0 || yRot != 0 || zRot != 0) {
 		const float c = Mth::RADDEG;
-		glTranslatef2(x * scale, y * scale, z * scale);
-		if (zRot != 0) glRotatef2(zRot * c, 0.0f, 0.0f, 1.0f);
-		if (yRot != 0) glRotatef2(yRot * c, 0.0f, 1.0f, 0.0f);
-		if (xRot != 0) glRotatef2(xRot * c, 1.0f, 0.0f, 0.0f);
+		RenderBackend::translateModel(x * scale, y * scale, z * scale);
+		if (zRot != 0) RenderBackend::rotateModel(zRot * c, 0.0f, 0.0f, 1.0f);
+		if (yRot != 0) RenderBackend::rotateModel(yRot * c, 0.0f, 1.0f, 0.0f);
+		if (xRot != 0) RenderBackend::rotateModel(xRot * c, 1.0f, 0.0f, 0.0f);
 	} else if (x != 0 || y != 0 || z != 0) {
-		glTranslatef2(x * scale, y * scale, z * scale);
+		RenderBackend::translateModel(x * scale, y * scale, z * scale);
 	} else {
 	}
 }
@@ -242,18 +243,18 @@ void ModelPart::renderHorrible( float scale )
 	//if (!compiled) compile(scale);
 
 	if (xRot != 0 || yRot != 0 || zRot != 0) {
-		glPushMatrix2();
-		glTranslatef2(x * scale, y * scale, z * scale);
-		if (zRot != 0) glRotatef2(zRot * Mth::RADDEG, 0.0f, 0.0f, 1.0f);
-		if (yRot != 0) glRotatef2(yRot * Mth::RADDEG, 0.0f, 1.0f, 0.0f);
-		if (xRot != 0) glRotatef2(xRot * Mth::RADDEG, 1.0f, 0.0f, 0.0f);
+		RenderBackend::pushModelMatrix();
+		RenderBackend::translateModel(x * scale, y * scale, z * scale);
+		if (zRot != 0) RenderBackend::rotateModel(zRot * Mth::RADDEG, 0.0f, 0.0f, 1.0f);
+		if (yRot != 0) RenderBackend::rotateModel(yRot * Mth::RADDEG, 0.0f, 1.0f, 0.0f);
+		if (xRot != 0) RenderBackend::rotateModel(xRot * Mth::RADDEG, 1.0f, 0.0f, 0.0f);
 
 		drawSlow(scale);
-		glPopMatrix2();
+		RenderBackend::popModelMatrix();
 	} else if (x != 0 || y != 0 || z != 0) {
-		glTranslatef2(x * scale, y * scale, z * scale);
+		RenderBackend::translateModel(x * scale, y * scale, z * scale);
 		drawSlow(scale);
-		glTranslatef2(-x * scale, -y * scale, -z * scale);
+		RenderBackend::translateModel(-x * scale, -y * scale, -z * scale);
 	} else {
 		drawSlow(scale);
 	}

@@ -243,6 +243,22 @@ void setDepthState(bool enabled, bool writeMask) {
 #endif
 }
 
+void setDepthWriteMask(bool writeMask) {
+#if defined(__WII__)
+    (void)writeMask;
+#else
+    glDepthMask(writeMask ? GL_TRUE : GL_FALSE);
+#endif
+}
+
+void setDepthTestState(bool enabled) {
+#if defined(__WII__)
+    (void)enabled;
+#else
+    if (enabled) glEnable2(GL_DEPTH_TEST); else glDisable2(GL_DEPTH_TEST);
+#endif
+}
+
 void setCullState(bool enabled) {
 #if defined(__WII__)
     WiiRenderer::setCullState(enabled);
@@ -264,12 +280,61 @@ void setBlendState(bool enabled, unsigned int srcFactor, unsigned int dstFactor)
 #endif
 }
 
+void setBlendEnabled(bool enabled) {
+#if defined(__WII__)
+    (void)enabled;
+#else
+    if (enabled) glEnable2(GL_BLEND); else glDisable2(GL_BLEND);
+#endif
+}
+
+void setBlendFunc(unsigned int srcFactor, unsigned int dstFactor) {
+#if defined(__WII__)
+    (void)srcFactor;
+    (void)dstFactor;
+#else
+    glBlendFunc2(srcFactor, dstFactor);
+#endif
+}
+
 
 void setAlphaTestState(bool enabled) {
 #if defined(__WII__)
     WiiRenderer::setAlphaTestState(enabled);
 #else
     if (enabled) glEnable2(GL_ALPHA_TEST); else glDisable2(GL_ALPHA_TEST);
+#endif
+}
+
+void setTextureState(bool enabled) {
+#if defined(__WII__)
+    (void)enabled;
+#else
+    if (enabled) glEnable2(GL_TEXTURE_2D); else glDisable2(GL_TEXTURE_2D);
+#endif
+}
+
+void setFogState(bool enabled) {
+#if defined(__WII__)
+    (void)enabled;
+#else
+    if (enabled) glEnable2(GL_FOG); else glDisable2(GL_FOG);
+#endif
+}
+
+void setColor(float r, float g, float b, float a) {
+#if defined(__WII__)
+    (void)r; (void)g; (void)b; (void)a;
+#else
+    glColor4f2(r, g, b, a);
+#endif
+}
+
+void setShadeModel(unsigned int mode) {
+#if defined(__WII__)
+    (void)mode;
+#else
+    glShadeModel2(mode);
 #endif
 }
 
@@ -317,6 +382,24 @@ void uploadArrayBuffer(const void* data, int bytes, bool dynamic) {
     (void)dynamic;
 #else
     glBufferData2(GL_ARRAY_BUFFER, bytes, data, dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+#endif
+}
+
+void genBuffers(int count, unsigned int* outIds) {
+#if defined(__WII__)
+    (void)count;
+    (void)outIds;
+#else
+    glGenBuffers2(count, outIds);
+#endif
+}
+
+void deleteBuffers(int count, const unsigned int* ids) {
+#if defined(__WII__)
+    (void)count;
+    (void)ids;
+#else
+    glDeleteBuffers(count, ids);
 #endif
 }
 

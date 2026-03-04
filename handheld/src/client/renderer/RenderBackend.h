@@ -44,9 +44,17 @@ void updateTexture2D(int x, int y, int w, int h, const void* data, int format, i
 /* Render State */
 
 void setDepthState(bool enabled, bool writeMask);
+void setDepthWriteMask(bool writeMask);
+void setDepthTestState(bool enabled);
 void setCullState(bool enabled);
 void setBlendState(bool enabled, unsigned int srcFactor, unsigned int dstFactor);
+void setBlendEnabled(bool enabled);
+void setBlendFunc(unsigned int srcFactor, unsigned int dstFactor);
 void setAlphaTestState(bool enabled);
+void setTextureState(bool enabled);
+void setFogState(bool enabled);
+void setColor(float r, float g, float b, float a);
+void setShadeModel(unsigned int mode);
 void setScissorState(bool enabled, int x, int y, int width, int height);
 
 /* Geometry Submission */
@@ -57,6 +65,8 @@ void submitTexturedMesh(int vertexCount, int vertexStride, unsigned int mode = R
 
 void bindArrayBuffer(unsigned int bufferId);
 void uploadArrayBuffer(const void* data, int bytes, bool dynamic);
+void genBuffers(int count, unsigned int* outIds);
+void deleteBuffers(int count, const unsigned int* ids);
 
 /* Shader Compatibility Layer (No-op on GX, kept for engine compatibility) */
 

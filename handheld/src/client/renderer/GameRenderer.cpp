@@ -72,7 +72,7 @@ void renderCursor(float x, float y, Minecraft* minecraft) {
 	Tesselator& t = Tesselator::instance;
 
 	minecraft->textures->loadAndBindTexture("gui/cursor.png");
-	glEnable(GL_BLEND);
+	RenderBackend::setBlendEnabled(true);
 
 	const float s = 32;
 	const float width = 16;
@@ -85,7 +85,7 @@ void renderCursor(float x, float y, Minecraft* minecraft) {
 	t.vertexUV(x, y, 0, 0, 0);
 	t.draw();
 
-	glDisable(GL_BLEND);
+	RenderBackend::setBlendEnabled(false);
 }
 
 /*private*/
@@ -100,10 +100,10 @@ void GameRenderer::setupCamera(float a, int eye) {
     glLoadIdentity2();
 
     float stereoScale = 0.07f;
-    if (mc->options.anaglyph3d) glTranslatef2(-(eye * 2 - 1) * stereoScale, 0, 0);
+    if (mc->options.anaglyph3d) RenderBackend::translateModel(-(eye * 2 - 1) * stereoScale, 0, 0);
     if (zoom != 1) {
-        glTranslatef2((float) zoom_x, (float) -zoom_y, 0);
-		glScalef2(zoom, zoom, 1);
+        RenderBackend::translateModel((float) zoom_x, (float) -zoom_y, 0);
+		RenderBackend::scaleModel(zoom, zoom, 1);
         RenderBackend::setPerspective(_setupCameraFov = getFov(a, true), mc->width / (float) mc->height, 0.05f, renderDistance);
     } else {
         RenderBackend::setPerspective(_setupCameraFov = getFov(a, true), mc->width / (float) mc->height, 0.05f, renderDistance);
@@ -111,7 +111,7 @@ void GameRenderer::setupCamera(float a, int eye) {
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity2();
-    if (mc->options.anaglyph3d) glTranslatef2((eye * 2 - 1) * 0.10f, 0, 0);
+    if (mc->options.anaglyph3d) RenderBackend::translateModel((eye * 2 - 1) * 0.10f, 0, 0);
 
     bobHurt(a);
     if (mc->options.bobView) bobView(a);
@@ -257,7 +257,7 @@ void GameRenderer::renderLevel(float a) {
 		setupClearColor(a);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glEnable2(GL_CULL_FACE);
+        RenderBackend::setCullState(true);
 
 		TIMER_POP_PUSH("camera");
         setupCamera(a, i);
@@ -278,7 +278,7 @@ void GameRenderer::renderLevel(float a) {
 // 			glFogf(GL_FOG_START, renderDistance  * 0.6f);
 // 			glFogf(GL_FOG_END, renderDistance);
 //         }
-        glEnable2(GL_FOG);
+        RenderBackend::setFogState(true);
         setupFog(1);
 
         if (mc->options.ambientOcclusion) {
@@ -298,17 +298,17 @@ void GameRenderer::renderLevel(float a) {
 		}
 
         setupFog(0);
-        glEnable2(GL_FOG);
+        RenderBackend::setFogState(true);
 
 		mc->textures->loadAndBindTexture("terrain.png");
-        glDisable2(GL_ALPHA_TEST);
-        glDisable2(GL_BLEND);
-        glEnable2(GL_CULL_FACE);
+        RenderBackend::setAlphaTestState(false);
+        RenderBackend::setBlendEnabled(false);
+        RenderBackend::setCullState(true);
 		TIMER_POP_PUSH("terrain-0");
         levelRenderer->render(cameraEntity, 0, a);
 
 		TIMER_POP_PUSH("terrain-1");
-        glEnable2(GL_ALPHA_TEST);
+        RenderBackend::setAlphaTestState(true);
         levelRenderer->render(cameraEntity, 1, a);
         
         glShadeModel2(GL_FLAT);
@@ -318,13 +318,13 @@ void GameRenderer::renderLevel(float a) {
 		TIMER_POP_PUSH("particles");
         particleEngine->render(cameraEntity, a);
 
-		glDisable2(GL_BLEND);
-        glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		RenderBackend::setBlendEnabled(false);
+        RenderBackend::setBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         setupFog(0);
-        glEnable2(GL_BLEND);
-        glDisable2(GL_CULL_FACE);
-		glDepthMask(GL_FALSE);
-        glDisable2(GL_ALPHA_TEST);
+        RenderBackend::setBlendEnabled(true);
+        RenderBackend::setCullState(false);
+		RenderBackend::setDepthWriteMask(false);
+        RenderBackend::setAlphaTestState(false);
 		mc->textures->loadAndBindTexture("terrain.png");
         //if (mc->options.fancyGraphics) {
         //    glColorMask(false, false, false, false);
@@ -340,18 +340,18 @@ void GameRenderer::renderLevel(float a) {
         //} else
 		{
 			//glDepthRangef(0.1f, 1.0f);
-			//glDepthMask(GL_FALSE);
+			//RenderBackend::setDepthWriteMask(false);
 			TIMER_POP_PUSH("terrain-water");
-			glEnable2(GL_DEPTH_TEST);
+			RenderBackend::setDepthTestState(true);
             levelRenderer->render(cameraEntity, 2, a);
 			//glDepthRangef(0, 1);
 
         }
         
-		glDepthMask(GL_TRUE);
-        glEnable2(GL_CULL_FACE);
-        glDisable2(GL_BLEND);
-        glEnable2(GL_ALPHA_TEST);
+		RenderBackend::setDepthWriteMask(true);
+        RenderBackend::setCullState(true);
+        RenderBackend::setBlendEnabled(false);
+        RenderBackend::setAlphaTestState(true);
 
 		if (/*!Minecraft::FLYBY_MODE &&*/ zoom == 1 && cameraEntity->isPlayer()) {
 			if (mc->hitResult.isHit() && !cameraEntity->isUnderLiquid(Material::water)) {
@@ -364,12 +364,12 @@ void GameRenderer::renderLevel(float a) {
 			}
 		}
 
-		glDisable2(GL_FOG);
+		RenderBackend::setFogState(false);
 //
 //        setupFog(0);
-//        glEnable2(GL_FOG);
+//        RenderBackend::setFogState(true);
 ////        levelRenderer->renderClouds(a);
-//        glDisable2(GL_FOG);
+//        RenderBackend::setFogState(false);
         setupFog(1);
 
         if (zoom == 1) {
@@ -424,7 +424,7 @@ void GameRenderer::moveCameraToPlayer(float a) {
     float z = player->zo + (player->z - player->zo) * a;
 
 	//printf("rot: %f %f\n", cameraRollO, cameraRoll);
-    glRotatef2(cameraRollO + (cameraRoll - cameraRollO) * a, 0, 0, 1);
+    RenderBackend::rotateModel(cameraRollO + (cameraRoll - cameraRollO) * a, 0, 0, 1);
 
 	//LOGI("player. alive, removed: %d, %d\n", player->isAlive(), player->removed);
 	if(player->isPlayer() && ((Player*)player)->isSleeping()) {
@@ -449,9 +449,9 @@ void GameRenderer::moveCameraToPlayer(float a) {
             float rotationY = thirdRotationO + (thirdRotation - thirdRotationO) * a;
             float xRot = thirdTiltO + (thirdTilt - thirdTiltO) * a;
 
-            glTranslatef2(0, 0, (float) -cameraDist);
-            glRotatef2(xRot, 1, 0, 0);
-            glRotatef2(rotationY, 0, 1, 0);
+            RenderBackend::translateModel(0, 0, (float) -cameraDist);
+            RenderBackend::rotateModel(xRot, 1, 0, 0);
+            RenderBackend::rotateModel(rotationY, 0, 1, 0);
         } else {
             float yRot = player->yRot;
             float xRot = player->xRot/* + 180.0f*/;
@@ -475,24 +475,24 @@ void GameRenderer::moveCameraToPlayer(float a) {
                 }
             }
 
-			//glRotatef2(180, 0, 1, 0);
+			//RenderBackend::rotateModel(180, 0, 1, 0);
 
-			glRotatef2(player->xRot - xRot, 1, 0, 0);
-            glRotatef2(player->yRot - yRot, 0, 1, 0);
-            glTranslatef2(0, 0, (float) -cameraDist);
-            glRotatef2(yRot - player->yRot, 0, 1, 0);
-            glRotatef2(xRot - player->xRot, 1, 0, 0);
+			RenderBackend::rotateModel(player->xRot - xRot, 1, 0, 0);
+            RenderBackend::rotateModel(player->yRot - yRot, 0, 1, 0);
+            RenderBackend::translateModel(0, 0, (float) -cameraDist);
+            RenderBackend::rotateModel(yRot - player->yRot, 0, 1, 0);
+            RenderBackend::rotateModel(xRot - player->xRot, 1, 0, 0);
         }
     } else {
-        glTranslatef2(0, 0, -0.1f);
+        RenderBackend::translateModel(0, 0, -0.1f);
     }
 
     if (!mc->options.fixedCamera) {
-        glRotatef2(player->xRotO + (player->xRot - player->xRotO) * a, 1.0f, 0.0f, 0.0f);
-        glRotatef2(player->yRotO + (player->yRot - player->yRotO) * a + 180, 0, 1, 0);
+        RenderBackend::rotateModel(player->xRotO + (player->xRot - player->xRotO) * a, 1.0f, 0.0f, 0.0f);
+        RenderBackend::rotateModel(player->yRotO + (player->yRot - player->yRotO) * a + 180, 0, 1, 0);
 		//if (_t_keepPic > 0)
 	}
-    glTranslatef2(0, heightOffset, 0);
+    RenderBackend::translateModel(0, heightOffset, 0);
 }
 
 /*private*/
@@ -503,7 +503,7 @@ void GameRenderer::bobHurt(float a) {
 
     if (player->health <= 0) {
         float duration = player->deathTime + a;
-        glRotatef2(40 - (40 * 200) / (duration + 200), 0, 0, 1);
+        RenderBackend::rotateModel(40 - (40 * 200) / (duration + 200), 0, 0, 1);
     }
 
     if (player->hurtTime <= 0) return;
@@ -513,9 +513,9 @@ void GameRenderer::bobHurt(float a) {
 
     float rr = player->hurtDir;
 
-    glRotatef2(-rr, 0, 1, 0);
-    glRotatef2(-hurt * 14, 0, 0, 1);
-    glRotatef2(+rr, 0, 1, 0);
+    RenderBackend::rotateModel(-rr, 0, 1, 0);
+    RenderBackend::rotateModel(-hurt * 14, 0, 0, 1);
+    RenderBackend::rotateModel(+rr, 0, 1, 0);
 }
 
 /*private*/
@@ -530,10 +530,10 @@ void GameRenderer::bobView(float a) {
     float b = -(player->walkDist + wda * a);
     float bob = player->oBob + (player->bob - player->oBob) * a;
     float tilt = player->oTilt + (player->tilt - player->oTilt) * a;
-    glTranslatef2((float) Mth::sin(b * Mth::PI) * bob * 0.5f, -(float) std::abs(Mth::cos(b * Mth::PI) * bob), 0);
-    glRotatef2((float) Mth::sin(b * Mth::PI) * bob * 3, 0, 0, 1);
-    glRotatef2((float) std::abs(Mth::cos(b * Mth::PI - 0.2f) * bob) * 5, 1, 0, 0);
-    glRotatef2((float) tilt, 1, 0, 0);
+    RenderBackend::translateModel((float) Mth::sin(b * Mth::PI) * bob * 0.5f, -(float) std::abs(Mth::cos(b * Mth::PI) * bob), 0);
+    RenderBackend::rotateModel((float) Mth::sin(b * Mth::PI) * bob * 3, 0, 0, 1);
+    RenderBackend::rotateModel((float) std::abs(Mth::cos(b * Mth::PI - 0.2f) * bob) * 5, 1, 0, 0);
+    RenderBackend::rotateModel((float) tilt, 1, 0, 0);
 }
 
 /*private*/
@@ -868,15 +868,15 @@ void GameRenderer::setupGuiScreen( bool clearColorBuffer )
 	RenderBackend::setOrtho(0, (GLfloat)screenWidth, (GLfloat)screenHeight, 0, 2000, 3000);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity2();
-	glTranslatef2(0, 0, -2000);
+	RenderBackend::translateModel(0, 0, -2000);
 }
 
 /*private*/
 void GameRenderer::renderItemInHand(float a, int eye) {
     glLoadIdentity2();
-    if (mc->options.anaglyph3d) glTranslatef2((eye * 2 - 1) * 0.10f, 0, 0);
+    if (mc->options.anaglyph3d) RenderBackend::translateModel((eye * 2 - 1) * 0.10f, 0, 0);
 
-    glPushMatrix2();
+    RenderBackend::pushModelMatrix();
     bobHurt(a);
     if (mc->options.bobView) bobView(a);
 
@@ -893,7 +893,7 @@ void GameRenderer::renderItemInHand(float a, int eye) {
         }
     }
 
-    glPopMatrix2();
+    RenderBackend::popModelMatrix();
     if (!mc->options.thirdPersonView && (mc->cameraTargetPlayer->isPlayer() && !((Player*)mc->cameraTargetPlayer)->isSleeping())) {
         itemInHandRenderer->renderScreenEffect(a);
         bobHurt(a);
@@ -925,14 +925,14 @@ void GameRenderer::prepareAndRenderClouds( LevelRenderer* levelRenderer, float a
 	//if(mc->options.isCloudsOn()) {
 	TIMER_PUSH("clouds");
 	glMatrixMode(GL_PROJECTION);
-	glPushMatrix2();
+	RenderBackend::pushProjectionMatrix();
 	glLoadIdentity2();
 	RenderBackend::setPerspective(_setupCameraFov = getFov(a, true), mc->width / (float) mc->height, 2, renderDistance * 512);
 	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix2();
+	RenderBackend::pushModelMatrix();
 	setupFog(0);
-	glDepthMask(false);
-	glEnable2(GL_FOG);
+	RenderBackend::setDepthWriteMask(false);
+	RenderBackend::setFogState(true);
 	glFogf(GL_FOG_START, renderDistance  * 0.2f);
 	glFogf(GL_FOG_END, renderDistance * 0.75f);
 	levelRenderer->renderSky(a);
@@ -941,12 +941,12 @@ void GameRenderer::prepareAndRenderClouds( LevelRenderer* levelRenderer, float a
 	levelRenderer->renderClouds(a);
 	glFogf(GL_FOG_START, renderDistance  * 0.6f);
 	glFogf(GL_FOG_END, renderDistance);
-	glDisable2(GL_FOG);
-	glDepthMask(true);
+	RenderBackend::setFogState(false);
+	RenderBackend::setDepthWriteMask(true);
 	setupFog(1);
-	glPopMatrix2();
+	RenderBackend::popModelMatrix();
 	glMatrixMode(GL_PROJECTION);
-	glPopMatrix2();
+	RenderBackend::popProjectionMatrix();
 	glMatrixMode(GL_MODELVIEW);
 	TIMER_POP();
 	//}
