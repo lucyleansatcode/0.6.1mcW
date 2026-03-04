@@ -4,8 +4,11 @@
 
 #include <gccore.h>
 
+#include <cassert>
 #include <unordered_map>
 #include <vector>
+
+#include "platform/log.h"
 
 namespace WiiRenderer {
 
@@ -36,6 +39,46 @@ Mtx44 s_projectionMatrix;
 std::vector<ModelMtxState> s_modelStack;
 std::vector<ProjMtxState> s_projectionStack;
 int s_projectionType = GX_PERSPECTIVE;
+
+const int kDefaultScissorWidth = 640;
+const int kDefaultScissorHeight = 480;
+
+void debugAssertUnsupported(bool condition, const char* message) {
+#if !defined(NDEBUG)
+    if (!condition) {
+        LOGW("%s\n", message);
+        assert(condition && "Unsupported render state request on Wii backend");
+    }
+#else
+    (void)condition;
+    (void)message;
+#endif
+}
+
+bool mapBlendFactor(unsigned int factor, u8* outFactor) {
+    if (!outFactor) {
+        return false;
+    }
+
+    switch (factor) {
+    case 0x0000: // GL_ZERO
+        *outFactor = GX_BL_ZERO;
+        return true;
+    case 0x0001: // GL_ONE
+        *outFactor = GX_BL_ONE;
+        return true;
+    case 0x0302: // GL_SRC_ALPHA
+        *outFactor = GX_BL_SRCALPHA;
+        return true;
+    case 0x0303: // GL_ONE_MINUS_SRC_ALPHA
+        *outFactor = GX_BL_INVSRCALPHA;
+        return true;
+    default:
+        break;
+    }
+
+    return false;
+}
 
 void applyModelMatrix() {
     GX_LoadPosMtxImm(s_modelMatrix, GX_PNMTX0);
@@ -234,25 +277,62 @@ void setCullState(bool enabled) {
 
 void setBlendState(bool enabled, unsigned int srcFactor, unsigned int dstFactor) {
     if (enabled) {
-        GX_SetBlendMode(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_NOOP);
+        u8 gxSrc = GX_BL_SRCALPHA;
+        u8 gxDst = GX_BL_INVSRCALPHA;
+        const bool srcSupported = mapBlendFactor(srcFactor, &gxSrc);
+        const bool dstSupported = mapBlendFactor(dstFactor, &gxDst);
+
+        if (!srcSupported || !dstSupported) {
+            LOGW("RenderBackend(Wii): unsupported blend factors src=0x%X dst=0x%X, using SRC_ALPHA/ONE_MINUS_SRC_ALPHA fallback\n",
+                 srcFactor,
+                 dstFactor);
+            debugAssertUnsupported(false, "Unsupported blend factor requested");
+            gxSrc = GX_BL_SRCALPHA;
+            gxDst = GX_BL_INVSRCALPHA;
+        }
+
+        GX_SetBlendMode(GX_BM_BLEND, gxSrc, gxDst, GX_LO_NOOP);
     } else {
         GX_SetBlendMode(GX_BM_NONE, GX_BL_ONE, GX_BL_ZERO, GX_LO_CLEAR);
     }
-
-    (void)srcFactor;
-    (void)dstFactor;
 }
 
 void setAlphaTestState(bool enabled) {
-    (void)enabled;
+    if (enabled) {
+        GX_SetAlphaCompare(GX_GREATER, 0, GX_AOP_AND, GX_ALWAYS, 0);
+    } else {
+        GX_SetAlphaCompare(GX_ALWAYS, 0, GX_AOP_AND, GX_ALWAYS, 0);
+    }
 }
 
 void setScissorState(bool enabled, int x, int y, int width, int height) {
-    if (enabled) {
-        GX_SetScissor(x, y, width, height);
-    } else {
-        GX_SetScissor(0, 0, 640, 480);
+    if (!enabled) {
+        GX_SetScissor(0, 0, kDefaultScissorWidth, kDefaultScissorHeight);
+        return;
     }
+
+    if (width <= 0 || height <= 0) {
+        LOGW("RenderBackend(Wii): invalid scissor rectangle (%d, %d, %d, %d), disabling scissor\n",
+             x,
+             y,
+             width,
+             height);
+        debugAssertUnsupported(false, "Invalid scissor rectangle requested");
+        GX_SetScissor(0, 0, kDefaultScissorWidth, kDefaultScissorHeight);
+        return;
+    }
+
+    if (x < 0 || y < 0) {
+        LOGW("RenderBackend(Wii): negative scissor origin (%d, %d), clamping to screen space\n", x, y);
+        debugAssertUnsupported(false, "Negative scissor origin requested");
+    } else {
+        GX_SetScissor(x, y, width, height);
+        return;
+    }
+
+    const int clampedX = x < 0 ? 0 : x;
+    const int clampedY = y < 0 ? 0 : y;
+    GX_SetScissor(clampedX, clampedY, width, height);
 }
 
 } // namespace WiiRenderer
