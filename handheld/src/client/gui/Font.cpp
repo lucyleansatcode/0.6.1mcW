@@ -11,8 +11,6 @@ Font::Font( Options* options, const std::string& name, Textures* textures )
 :	options(options),
 	fontTexture(0),
 	fontName(name),
-	index(0),
-	count(0),
 	_textures(textures),
 	_x(0), _y(0),
 	_cols(16), _rows(16),
@@ -75,58 +73,6 @@ void Font::init( Options* options )
 		charWidths[i] = x + 2;
 		fcharWidths[i] = (float) charWidths[i];
 	}
-
-#ifdef USE_VBO
-	return; // this <1
-#endif
-
-#ifndef USE_VBO
-	listPos = glGenLists(256 + 32);
-
-	Tesselator& t = Tesselator::instance;
-	for (int i = 0; i < 256; i++) {
-		glNewList(listPos + i, GL_COMPILE);
-		// @attn @huge @note: This is some dangerous code right here / Aron, added ^1
-		t.begin();
-		buildChar(i);
-		t.end(false, -1);
-
-		glTranslatef2((float)charWidths[i], 0.0f, 0.0f);
-		glEndList();
-	}
-
-	for (int i = 0; i < 32; i++) {
-		int br = ((i >> 3) & 1) * 0x55;
-		int r = ((i >> 2) & 1) * 0xaa + br;
-		int g = ((i >> 1) & 1) * 0xaa + br;
-		int b = ((i >> 0) & 1) * 0xaa + br;
-		if (i == 6) {
-			r += 0x55;
-		}
-		bool darken = i >= 16;
-
-		if (options->anaglyph3d) {
-			int cr = (r * 30 + g * 59 + b * 11) / 100;
-			int cg = (r * 30 + g * 70) / (100);
-			int cb = (r * 30 + b * 70) / (100);
-
-			r = cr;
-			g = cg;
-			b = cb;
-		}
-
-		// color = r << 16 | g << 8 | b;
-		if (darken) {
-			r /= 4;
-			g /= 4;
-			b /= 4;
-		}
-
-		glNewList(listPos + 256 + i, GL_COMPILE);
-		glColor3f(r / 255.0f, g / 255.0f, b / 255.0f);
-		glEndList();
-	}
-#endif
 }
 
 void Font::drawShadow( const std::string& str, float x, float y, int color )
@@ -152,81 +98,12 @@ void Font::draw( const char* str, float x, float y, int color )
 
 void Font::draw( const char* str, float x, float y, int color, bool darken )
 {
-#ifdef USE_VBO
 	drawSlow(str, x, y, color, darken);
-#endif
 }
 
 void Font::draw( const std::string& str, float x, float y, int color, bool darken )
 {
-#ifdef USE_VBO
 	drawSlow(str, x, y, color, darken);
-	return;
-#endif
-
-	if (str.empty()) return;
-
-	if (darken) {
-		int oldAlpha = color & 0xff000000;
-		color = (color & 0xfcfcfc) >> 2;
-		color += oldAlpha;
-	}
-
-	_textures->loadAndBindTexture(fontName);
-	float r = ((color >> 16) & 0xff) / 255.0f;
-	float g = ((color >> 8) & 0xff) / 255.0f;
-	float b = ((color) & 0xff) / 255.0f;
-	float a = ((color >> 24) & 0xff) / 255.0f;
-	if (a == 0) a = 1;
-	glColor4f2(r, g, b, a);
-
-	static const std::string hex("0123456789abcdef");
-
-	index = 0;
-	glPushMatrix2();
-	glTranslatef2((float)x, (float)y, 0.0f);
-	for (unsigned int i = 0; i < str.length(); i++) {
-		while (str.length() > i + 1 && str[i] == '§') {
-			int cc = hex.find((char)tolower(str[i + 1]));
-			if (cc < 0 || cc > 15) cc = 15;
-			lists[index++] = listPos + 256 + cc + (darken ? 16 : 0);
-
-			if (index == 1024) {
-				count = index;
-				index = 0;
-#ifndef USE_VBO
-				glCallLists(count, GL_UNSIGNED_INT, lists);
-#endif
-				count = 1024;
-			}
-
-			i += 2;
-		}
-
-		if (i < str.length()) {
-			//int ch = SharedConstants.acceptableLetters.indexOf(str.charAt(i));
-			char ch = str[i];
-			if (ch >= 0) {
-				//ib.put(listPos + ch + 32);
-				lists[index++] = listPos + ch;
-			}
-		}
-
-		if (index == 1024) {
-			count = index;
-			index = 0;
-#ifndef USE_VBO
-			glCallLists(count, GL_UNSIGNED_INT, lists);
-#endif
-			count = 1024;
-		}
-	}
-	count = index;
-	index = 0;
-#ifndef USE_VBO
-	glCallLists(count, GL_UNSIGNED_INT, lists);
-#endif
-	glPopMatrix2();
 }
 
 int Font::width( const std::string& str )
@@ -331,14 +208,45 @@ void Font::drawSlow( const char* str, float x, float y, int color, bool darken /
 	t.begin();
 	int alpha = (0xff000000 & color) >> 24;
 	if (!alpha) alpha = 0xff;
-	t.color((color >> 16) & 0xff, (color >> 8) & 0xff, color & 0xff, alpha);
+	int baseR = (color >> 16) & 0xff;
+	int baseG = (color >> 8) & 0xff;
+	int baseB = color & 0xff;
+	t.color(baseR, baseG, baseB, alpha);
 	
 	t.addOffset((float)x, (float)y, 0);
 	float xOffset = 0;
 	float yOffset = 0;
+	static const std::string hex("0123456789abcdef");
 
 	while (unsigned char ch = *(str++)) {
-		if (ch == '\n') {
+		if (ch == '§') {
+			if (!*str) break;
+			int cc = (int)hex.find((char)tolower(*str++));
+			if (cc < 0 || cc > 15) cc = 15;
+
+			int br = ((cc >> 3) & 1) * 0x55;
+			int r = ((cc >> 2) & 1) * 0xaa + br;
+			int g = ((cc >> 1) & 1) * 0xaa + br;
+			int b = ((cc >> 0) & 1) * 0xaa + br;
+			if (cc == 6) r += 0x55;
+
+			if (options->anaglyph3d) {
+				int cr = (r * 30 + g * 59 + b * 11) / 100;
+				int cg = (r * 30 + g * 70) / 100;
+				int cb = (r * 30 + b * 70) / 100;
+				r = cr;
+				g = cg;
+				b = cb;
+			}
+
+			if (darken) {
+				r /= 4;
+				g /= 4;
+				b /= 4;
+			}
+
+			t.color(r, g, b, alpha);
+		} else if (ch == '\n') {
 			xOffset = 0;
 			yOffset += lineHeight;
 		} else {
@@ -369,4 +277,3 @@ void Font::buildChar( unsigned char i, float x /*= 0*/, float y /*=0*/ )
 	t.vertexUV(x + s, y, 0, (ix + s) / 128.0f + uo, iy / 128.0f + vo);
 	t.vertexUV(x, y, 0, ix / 128.0f + uo, iy / 128.0f + vo);
 }
-
