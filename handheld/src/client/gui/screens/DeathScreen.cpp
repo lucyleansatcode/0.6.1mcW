@@ -4,6 +4,7 @@
 #include "../../Minecraft.h"
 #include "../../player/LocalPlayer.h"
 #include "../../../platform/time.h"
+#include "../GuiRenderContext.h"
 
 static const int WAIT_TICKS = 30;
 
@@ -56,10 +57,10 @@ void DeathScreen::render( int xm, int ym, float a )
 {
 	fillGradient(0, 0, width, height, 0x60500000, 0xa0803030);
 
-	glPushMatrix2();
-	glScalef2(2, 2, 2);
+	GuiRenderContext::pushMatrix();
+	GuiRenderContext::scale(2, 2, 2);
 	drawCenteredString(font, "You died!", width / 2 / 2, height / 8, 0xffffff);
-	glPopMatrix2();
+	GuiRenderContext::popMatrix();
 
 	if (_tick >= WAIT_TICKS)
 		Screen::render(xm, ym, a);

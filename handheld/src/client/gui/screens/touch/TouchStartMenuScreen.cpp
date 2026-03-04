@@ -21,6 +21,7 @@
 
 #include "../DialogDefinitions.h"
 #include "../SimpleChooseLevelScreen.h"
+#include "../../GuiRenderContext.h"
 
 //
 // Buy Button implementation
@@ -39,7 +40,7 @@ BuyButton::BuyButton(int id)
 }
 
 void BuyButton::render(Minecraft* minecraft, int xm, int ym) {
-	glColor4f2(1, 1, 1, 1);
+	GuiRenderContext::setColor(1, 1, 1, 1);
 	bool hovered = active && (minecraft->useTouchscreen()? (xm >= x && ym >= y && xm < x + width && ym < y + height) : false);
 	renderBg(minecraft, xm, ym);
 	TextureId texId = (_imageDef.name.length() > 0)? minecraft->textures->loadAndBindTexture(_imageDef.name) : Textures::InvalidId;
@@ -231,7 +232,7 @@ void StartMenuScreen::render( int xm, int ym, float a )
 {
 	renderBackground();
     
-    glEnable2(GL_BLEND);
+    GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 
 #if defined(RPI)
 	TextureId id = minecraft->textures->loadTexture("gui/pi_title.png");
@@ -251,7 +252,7 @@ void StartMenuScreen::render( int xm, int ym, float a )
 
 		// Render title text
 		Tesselator& t = Tesselator::instance;
-		glColor4f2(1, 1, 1, 1);
+		GuiRenderContext::setColor(1, 1, 1, 1);
 		t.begin();
 			t.vertexUV(x-wh, y+h, blitOffset, 0, 1);
 			t.vertexUV(x+wh, y+h, blitOffset, 1, 1);
@@ -264,7 +265,7 @@ void StartMenuScreen::render( int xm, int ym, float a )
 		//patch->draw(t, 0, 20);
 	}
 	Screen::render(xm, ym, a);
-    glDisable2(GL_BLEND);
+    GuiRenderContext::setBlendState(false, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 }
 
 void StartMenuScreen::_updateLicense()

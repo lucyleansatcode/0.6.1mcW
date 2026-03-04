@@ -207,7 +207,7 @@ void IngameBlockSelectionScreen::render( int xm, int ym, float a )
 	Tesselator::instance.colorABGR(0xffffffff);
 	minecraft->textures->loadAndBindTexture("gui/itemframe.png");
 	GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
-	glColor4f2(1, 1, 1, 1);
+	GuiRenderContext::setColor(1, 1, 1, 1);
 
 	blit(0, bbox.y-By, 0, 0, width, bbox.h+By+By, 215, 256); // why bbox.h + 1*B?
 	GuiRenderContext::setBlendState(false, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);

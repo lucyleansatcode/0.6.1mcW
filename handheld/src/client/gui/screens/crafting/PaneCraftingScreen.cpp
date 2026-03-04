@@ -16,6 +16,7 @@
 #include "../../../../world/level/Level.h"
 #include "../../../../world/item/DyePowderItem.h"
 #include "../../../../world/item/crafting/Recipe.h"
+#include "../../GuiRenderContext.h"
 
 static NinePatchLayer* guiPaneFrame = NULL;
 
@@ -201,7 +202,7 @@ void PaneCraftingScreen::render(int xm, int ym, float a) {
 	//renderBackground();
 	Tesselator& t = Tesselator::instance;
 	guiBackground->draw(t, 0, 0);
-	glEnable2(GL_ALPHA_TEST);
+	GuiRenderContext::setAlphaTestState(true);
 
 	// Buttons (Left side + crafting)
 	super::render(xm, ym, a);
@@ -262,7 +263,7 @@ void PaneCraftingScreen::render(int xm, int ym, float a) {
 		//minecraft->font->drawWordWrap(currentItemDesc, rightBx + 2, (float)btnCraft.y + btnCraft.h + 6, descFrameWidth-4, rgbActive);
 		minecraft->font->drawWordWrap(currentItemDesc, (float)btnCraft.x, (float)(btnCraft.y + btnCraft.height + 6), (float)btnCraft.width, rgbActive);
 	}
-	//glDisable2(GL_ALPHA_TEST);
+	//GuiRenderContext::setAlphaTestState(false);
 }
 
 void PaneCraftingScreen::buttonClicked(Button* button) {

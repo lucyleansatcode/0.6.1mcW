@@ -4,6 +4,7 @@
 #include "../renderer/TileRenderer.h"
 #include "../player/LocalPlayer.h"
 #include "../../world/entity/player/Inventory.h"
+#include "../GuiRenderContext.h"
 
 UploadPhotoScreen::UploadPhotoScreen()
 	:
@@ -27,7 +28,7 @@ void UploadPhotoScreen::init()
 
 void UploadPhotoScreen::renderSlots()
 {
-	glColor4f2(1, 1, 1, 1);
+	GuiRenderContext::setColor(1, 1, 1, 1);
 
 	blitOffset = -90;
 

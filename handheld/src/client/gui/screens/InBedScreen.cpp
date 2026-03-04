@@ -4,6 +4,7 @@
 #include "../../Minecraft.h"
 #include "../../player/LocalPlayer.h"
 #include "../../../platform/time.h"
+#include "../GuiRenderContext.h"
 
 static const int WAIT_TICKS = 30;
 
@@ -35,10 +36,10 @@ void InBedScreen::setupPositions() {
 }
 
 void InBedScreen::render( int xm, int ym, float a ) {
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
+	
 	Screen::render(xm, ym, a);
-	glDisable(GL_BLEND);
+	GuiRenderContext::setBlendState(false, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 }
 
 void InBedScreen::buttonClicked( Button* button ) {

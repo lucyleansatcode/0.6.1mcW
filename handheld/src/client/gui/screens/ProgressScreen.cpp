@@ -6,6 +6,7 @@
 #include "../../renderer/Tesselator.h"
 #include "../../../SharedConstants.h"
 #include "../../renderer/Textures.h"
+#include "../GuiRenderContext.h"
 
 ProgressScreen::ProgressScreen()
 :	ticks(0)
@@ -43,7 +44,7 @@ void ProgressScreen::render( int xm, int ym, float a )
 
 		//printf("%d, %d - %d, %d\n", x, y, x + w, y + h);
 
-		glDisable2(GL_TEXTURE_2D);
+		GuiRenderContext::setTexture2DState(false);
 		t.begin();
 		t.color(0x808080);
 		t.vertex((float)x, (float)y, 0);
@@ -57,10 +58,10 @@ void ProgressScreen::render( int xm, int ym, float a )
 		t.vertex((float)(x + i), (float)(y + h), 0);
 		t.vertex((float)(x + i), (float)y, 0);
 		t.draw();
-		glEnable2(GL_TEXTURE_2D);
+		GuiRenderContext::setTexture2DState(true);
 	}
 
-    glEnable2(GL_BLEND);
+    GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 
 	const char* title = "Generating world";
 	minecraft->font->drawShadow(title, (float)((width - minecraft->font->width(title)) / 2), (float)(height / 2 - 4 - 16), 0xffffff);
@@ -85,7 +86,7 @@ void ProgressScreen::render( int xm, int ym, float a )
 		drawCenteredString(minecraft->font, spinnerTexts[n], spinnerX, progressY, 0xffffffff);
 	}
 
-    glDisable2(GL_BLEND);
+    GuiRenderContext::setBlendState(false, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 	sleepMs(50);
 }
 

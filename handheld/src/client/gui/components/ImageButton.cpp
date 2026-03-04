@@ -4,6 +4,7 @@
 #include "../../../platform/log.h"
 #include "../../../util/Mth.h"
 #include "../../renderer/Textures.h"
+#include "../GuiRenderContext.h"
 
 
 ImageButton::ImageButton(int id, const std::string& msg)
@@ -39,7 +40,7 @@ void ImageButton::render(Minecraft* minecraft, int xm, int ym) {
 	Font* font = minecraft->font;
 
 	//minecraft->textures->loadAndBindTexture("gui/gui.png");
-	glColor4f2(1, 1, 1, 1);
+	GuiRenderContext::setColor(1, 1, 1, 1);
 
 	bool hovered = active && (minecraft->useTouchscreen()? (_currentlyDown && xm >= x && ym >= y && xm < x + width && ym < y + height) : false);
 	bool IsSecondImage = isSecondImage(hovered);

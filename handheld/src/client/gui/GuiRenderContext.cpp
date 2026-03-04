@@ -16,6 +16,10 @@ void setDepthState(bool enabled, bool writeMask) {
     RenderBackend::setDepthState(enabled, writeMask);
 }
 
+void setCullState(bool enabled) {
+    RenderBackend::setCullState(enabled);
+}
+
 void setScissorState(bool enabled, int x, int y, int width, int height) {
     RenderBackend::setScissorState(enabled, x, y, width, height);
 }

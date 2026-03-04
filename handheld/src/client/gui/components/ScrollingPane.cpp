@@ -150,12 +150,10 @@ void ScrollingPane::render( int xm, int ym, float alpha ) {
 
 	// Render
 	//if (isSet(SF_Scissor)) {
-	//	glEnable2(GL_SCISSOR_TEST);
 	//	GLuint x = (GLuint)(screenScale * bbox.x);
 	//	GLuint y = 480 - (GLuint)(screenScale * (bbox.y + bbox.h));
 	//	GLuint w = (GLuint)(screenScale * bbox.w);
 	//	GLuint h = (GLuint)(screenScale * bbox.h);
-	//	glScissor(x, y, w, h);
 	//	LOGI("x, y, w, h: %d, %d, %d, %d\n", x, y, w, h);
 	//}
 
@@ -187,7 +185,6 @@ void ScrollingPane::render( int xm, int ym, float alpha ) {
 	renderBatch(itemsToRender, alpha);
 
 	//if (isSet(SF_Scissor))
-	//	glDisable2(GL_SCISSOR_TEST);
 }
 
 void ScrollingPane::renderBatch(std::vector<GridItem>& items, float alpha) {

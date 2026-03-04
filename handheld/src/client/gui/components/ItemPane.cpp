@@ -54,12 +54,11 @@ void ItemPane::renderBatch( std::vector<GridItem>& items, float alpha )
 	const std::vector<CItem*>& cat = screen->getItems(this);
 	if (cat.empty()) return;
 
-	glEnable2(GL_SCISSOR_TEST);
-	unsigned int x = (unsigned int)(screenScale * bbox.x);
+		unsigned int x = (unsigned int)(screenScale * bbox.x);
 	unsigned int y = physicalScreenHeight - (unsigned int)(screenScale * (bbox.y + bbox.h));
 	unsigned int w = (unsigned int)(screenScale * bbox.w);
 	unsigned int h = (unsigned int)(screenScale * bbox.h);
-	glScissor(x, y, w, h);
+	GuiRenderContext::setScissorState(true, x, y, w, h);
 
 	Tesselator& t = Tesselator::instance;
 
@@ -125,7 +124,7 @@ void ItemPane::renderBatch( std::vector<GridItem>& items, float alpha )
 	}
 
 	//LOGI("scroll: %f - %f, %f :: %f, %f\n", hScroll.alpha, hScroll.x, hScroll.y, hScroll.w, hScroll.h);
-	glDisable2(GL_SCISSOR_TEST);
+	GuiRenderContext::setScissorState(false, 0, 0, 0, 0);
 
 	drawScrollBar(hScroll);
 	drawScrollBar(vScroll);

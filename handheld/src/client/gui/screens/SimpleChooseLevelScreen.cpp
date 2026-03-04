@@ -5,6 +5,7 @@
 #include "../../Minecraft.h"
 #include "../../../world/level/LevelSettings.h"
 #include "../../../platform/time.h"
+#include "../GuiRenderContext.h"
 
 SimpleChooseLevelScreen::SimpleChooseLevelScreen(const std::string& levelName)
 :	bCreative(0),
@@ -56,13 +57,13 @@ void SimpleChooseLevelScreen::setupPositions()
 void SimpleChooseLevelScreen::render( int xm, int ym, float a )
 {
 	renderDirtBackground(0);
-    glEnable2(GL_BLEND);
+    GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 
 	drawCenteredString(minecraft->font, "Mobs, health and gather resources", width/2, bSurvival->y + bSurvival->height + 4, 0xffcccccc);
 	drawCenteredString(minecraft->font, "Unlimited resources and flying", width/2, bCreative->y + bCreative->height + 4, 0xffcccccc);
 
 	Screen::render(xm, ym, a);
-    glDisable2(GL_BLEND);
+    GuiRenderContext::setBlendState(false, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 }
 
 void SimpleChooseLevelScreen::buttonClicked( Button* button )
