@@ -1,7 +1,7 @@
 #include "IngameBlockSelectionScreen.h"
 #include "../../renderer/TileRenderer.h"
 #include "../../player/LocalPlayer.h"
-#include "../../renderer/render_compat.h"
+#include "../GuiRenderContext.h"
 #include "../../renderer/RenderBackend.h"
 #include "../../Minecraft.h"
 #include "../../sound/SoundEngine.h"
@@ -20,7 +20,7 @@
     static const std::string demoVersionString("Not available in the demo version");
 #endif
 
-IngameBlockSelectionScreen::IngameBlockSelectionScreen() 
+IngameBlockSelectionScreen::IngameBlockSelectionScreen()
 :	selectedItem(0),
 	_area(0,0,0,0),
 	_pendingQuit(false),
@@ -40,7 +40,7 @@ void IngameBlockSelectionScreen::init()
 
 	_area = RectangleArea(	(float)getSlotPosX(0) - 4,
 							(float)getSlotPosY(0) - 4,
-							(float)getSlotPosX(InventoryCols) + 4, 
+							(float)getSlotPosX(InventoryCols) + 4,
 							(float)getSlotPosY(InventoryRows) + 4);
 
 	ItemInstance* selected = inventory->getSelected();
@@ -138,7 +138,7 @@ int IngameBlockSelectionScreen::getSlotPosY(int slotY) {
 }
 
 //int IngameBlockSelectionScreen::getLinearSlotId(int x, int y) {
-//	return 
+//	return
 //}
 
 
@@ -269,21 +269,21 @@ void IngameBlockSelectionScreen::selectSlotAndClose()
 
 void IngameBlockSelectionScreen::render( int xm, int ym, float a )
 {
-	glDisable2(GL_DEPTH_TEST);
+	GuiRenderContext::setDepthState(false, false);
 	fill(0, 0, width, height, (0x80) << 24);
-	glEnable2(GL_BLEND);
+	GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 
-	glDisable2(GL_ALPHA_TEST);
-	glEnable2(GL_BLEND);
-	glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GuiRenderContext::setAlphaTestState(false);
+	GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
+
 
 	renderSlots();
 	renderDemoOverlay();
 
-	glEnable2(GL_ALPHA_TEST);
-	glDisable2(GL_BLEND);
+	GuiRenderContext::setAlphaTestState(true);
+	GuiRenderContext::setBlendState(false, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 
-	glEnable2(GL_DEPTH_TEST);
+	GuiRenderContext::setDepthState(true, true);
 
 	Screen::render(xm, ym, a);
 }

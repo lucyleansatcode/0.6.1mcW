@@ -6,7 +6,7 @@
 #include "../../../gamemode/GameMode.h"
 #include "../../../renderer/TileRenderer.h"
 #include "../../../player/LocalPlayer.h"
-#include "../../../renderer/render_compat.h"
+#include "../../GuiRenderContext.h"
 #include "../../../renderer/entity/ItemRenderer.h"
 #include "../../../renderer/Tesselator.h"
 #include "../../../renderer/Textures.h"
@@ -45,11 +45,11 @@ static const int ItemSize = (int)(BlockPixels + 2*BorderPixels);
 
 static const int Bx = 10; // Border Frame width
 static const int By = 6; // Border Frame height
-    
+
 //
 // Block selection screen
 //
-IngameBlockSelectionScreen::IngameBlockSelectionScreen() 
+IngameBlockSelectionScreen::IngameBlockSelectionScreen()
 :	selectedItem(0),
 	_blockList(NULL),
 	_pendingClose(false),
@@ -71,7 +71,7 @@ void IngameBlockSelectionScreen::init()
 {
 	Inventory* inventory = minecraft->player->inventory;
 
-	//const int itemWidth = 2 * BorderPixels + 
+	//const int itemWidth = 2 * BorderPixels +
 
 	int maxWidth = width - Bx - Bx;
 	InventoryColumns = maxWidth / ItemSize;
@@ -196,8 +196,8 @@ void IngameBlockSelectionScreen::tick()
 
 void IngameBlockSelectionScreen::render( int xm, int ym, float a )
 {
-	glDisable2(GL_DEPTH_TEST);
-	glEnable2(GL_BLEND);
+	GuiRenderContext::setDepthState(false, false);
+	GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 
 	Screen::render(xm, ym, a);
 	_blockList->render(xm, ym, a);
@@ -206,13 +206,13 @@ void IngameBlockSelectionScreen::render( int xm, int ym, float a )
 	IntRectangle& bbox = _blockList->rect;
 	Tesselator::instance.colorABGR(0xffffffff);
 	minecraft->textures->loadAndBindTexture("gui/itemframe.png");
-	glEnable2(GL_BLEND);
+	GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 	glColor4f2(1, 1, 1, 1);
-	glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	blit(0, bbox.y-By, 0, 0, width, bbox.h+By+By, 215, 256); // why bbox.h + 1*B?
-	glDisable2(GL_BLEND);
 
-	glEnable2(GL_DEPTH_TEST);
+	blit(0, bbox.y-By, 0, 0, width, bbox.h+By+By, 215, 256); // why bbox.h + 1*B?
+	GuiRenderContext::setBlendState(false, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
+
+	GuiRenderContext::setDepthState(true, true);
 }
 
 void IngameBlockSelectionScreen::renderDemoOverlay() {

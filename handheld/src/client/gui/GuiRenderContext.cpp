@@ -1,11 +1,10 @@
 #include "GuiRenderContext.h"
 
 #include "../renderer/RenderBackend.h"
-#include "../renderer/render_compat.h"
 
 namespace GuiRenderContext {
 
-void setBlendState(bool enabled, unsigned int srcFactor, unsigned int dstFactor) {
+void setBlendState(bool enabled, RenderState srcFactor, RenderState dstFactor) {
     RenderBackend::setBlendState(enabled, srcFactor, dstFactor);
 }
 
@@ -33,7 +32,7 @@ void setColor(float r, float g, float b, float a) {
     glColor4f2(r, g, b, a);
 }
 
-void setShadeModel(unsigned int mode) {
+void setShadeModel(RenderState mode) {
     glShadeModel2(mode);
 }
 
@@ -53,20 +52,20 @@ void popMatrix() {
     glPopMatrix2();
 }
 
-void genBuffers(int count, unsigned int* outIds) {
+void genBuffers(int count, RenderId* outIds) {
     glGenBuffers2(count, outIds);
 }
 
-void deleteBuffers(int count, const unsigned int* ids) {
+void deleteBuffers(int count, const RenderId* ids) {
     glDeleteBuffers(count, ids);
 }
 
 void restoreGuiDefaults() {
     setDepthState(true, true);
-    setBlendState(false, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    setBlendState(false, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
     setAlphaTestState(true);
     setTexture2DState(true);
-    setShadeModel(GL_FLAT);
+    setShadeModel(GuiRenderContext::ShadeFlat);
     setColor(1.0f, 1.0f, 1.0f, 1.0f);
     setScissorState(false, 0, 0, 0, 0);
 }
