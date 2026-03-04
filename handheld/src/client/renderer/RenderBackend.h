@@ -81,10 +81,16 @@ void setScissorState(bool enabled, int x, int y, int width, int height);
 
 /* Geometry Submission */
 
+// Submits interleaved vertex data using the currently bound array buffer.
+// Supported runtime formats are: position+uv (stride >= 20) and
+// position+uv+color (stride >= 24, color packed as ABGR/RGBA bytes).
 void submitTexturedMesh(int vertexCount, int vertexStride, unsigned int mode = RB_TRIANGLES);
 
 /* Buffers */
 
+// Legacy GL-style array buffer API used by fixed-function draw paths.
+// On Wii this is backed by CPU-side buffer storage and immediate GX FIFO
+// submission; there is no hardware VBO object.
 void bindArrayBuffer(unsigned int bufferId);
 void uploadArrayBuffer(const void* data, int bytes, bool dynamic);
 void genBuffers(int count, unsigned int* outIds);
