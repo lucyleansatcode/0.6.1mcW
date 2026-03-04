@@ -20,6 +20,7 @@
 #include "../../platform/input/Mouse.h"
 #include "../../world/level/Level.h"
 #include "../../world/PosTranslator.h"
+#include "GuiRenderContext.h"
 
 float Gui::InvGuiScale = 1.0f / 3.0f;
 float Gui::GuiScale = 1.0f / Gui::InvGuiScale;
@@ -44,9 +45,9 @@ Gui::Gui(Minecraft* minecraft)
 	MAX_MESSAGE_WIDTH(240),
 	itemNameOverlayTime(2)
 {
-	glGenBuffers2(1, &_inventoryRc.vboId);
-	glGenBuffers2(1, &rcFeedbackInner.vboId);
-	glGenBuffers2(1, &rcFeedbackOuter.vboId);
+	GuiRenderContext::genBuffers(1, &_inventoryRc.vboId);
+	GuiRenderContext::genBuffers(1, &rcFeedbackInner.vboId);
+	GuiRenderContext::genBuffers(1, &rcFeedbackOuter.vboId);
 	//Gui::InvGuiScale = 1.0f / (int) (3 * Minecraft::width / 854);
 }
 
@@ -55,7 +56,7 @@ Gui::~Gui()
 	if (_slotFont)
 		delete _slotFont;
 
-	glDeleteBuffers(1, &_inventoryRc.vboId);
+	GuiRenderContext::deleteBuffers(1, &_inventoryRc.vboId);
 }
 
 void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
@@ -72,7 +73,7 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
 	blitOffset = -90;
 	renderProgressIndicator(isTouchInterface, screenWidth, screenHeight, a);
 
-	glColor4f2(1, 1, 1, 1);
+	GuiRenderContext::setColor(1, 1, 1, 1);
 
 	// H: 4
     // T: 7
@@ -91,13 +92,13 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
 	}
 
 	if(minecraft->player->getSleepTimer() > 0) {
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_ALPHA_TEST);
+		GuiRenderContext::setDepthState(false, true);
+		GuiRenderContext::setAlphaTestState(false);
 
 		renderSleepAnimation(screenWidth, screenHeight);
 
-		glEnable(GL_ALPHA_TEST);
-		glEnable(GL_DEPTH_TEST);
+		GuiRenderContext::setAlphaTestState(true);
+		GuiRenderContext::setDepthState(true, true);
 	}
 
 	renderToolBar(a, ySlot, screenWidth);
@@ -108,10 +109,11 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
 	#ifdef APPLE_DEMO_PROMOTION
 		font->drawShadow("Demo version", 2, 0 + 2, 0xffffffff);
 	#endif /*APPLE_DEMO_PROMOTION*/
-	glEnable(GL_BLEND);
+	GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	unsigned int max = 10;
     bool isChatting = false;
 	renderChatMessages(screenHeight, max, isChatting, font);
+	GuiRenderContext::restoreGuiDefaults();
 #if !defined(RPI)
 	renderOnSelectItemNameText(screenWidth, font, ySlot);
 #endif
@@ -119,11 +121,12 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
 	renderDebugInfo();
 #endif
 
-//        glPopMatrix2();
+//        GuiRenderContext::popMatrix();
 //
-//        glEnable(GL_ALPHA_TEST);
-    glDisable(GL_BLEND);
-	glEnable2(GL_ALPHA_TEST);
+//        GuiRenderContext::setAlphaTestState(true);
+    GuiRenderContext::setBlendState(false, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GuiRenderContext::setAlphaTestState(true);
+	GuiRenderContext::restoreGuiDefaults();
 }
 
 int Gui::getSlotIdAt(int x, int y) {
@@ -271,10 +274,10 @@ void Gui::renderVignette(float br, int w, int h) {
 	if (br > 1) br = 1;
 	tbr += (br - tbr) * 0.01f;
 
-	glDisable(GL_DEPTH_TEST);
-	glDepthMask(false);
-	glBlendFunc2(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
-	glColor4f2(tbr, tbr, tbr, 1);
+	GuiRenderContext::setDepthState(false, true);
+	GuiRenderContext::setDepthState(false, false);
+	GuiRenderContext::setBlendState(true, GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
+	GuiRenderContext::setColor(tbr, tbr, tbr, 1);
 	minecraft->textures->loadAndBindTexture("misc/vignette.png");
 
 	Tesselator& t = Tesselator::instance;
@@ -284,10 +287,11 @@ void Gui::renderVignette(float br, int w, int h) {
 	t.vertexUV((float)w, 0, -90, 1, 0);
 	t.vertexUV(0, 0, -90, 0, 0);
 	t.draw();
-	glDepthMask(true);
-	glEnable(GL_DEPTH_TEST);
-	glColor4f2(1, 1, 1, 1);
-	glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GuiRenderContext::setDepthState(false, true);
+	GuiRenderContext::setDepthState(true, true);
+	GuiRenderContext::setColor(1, 1, 1, 1);
+	GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GuiRenderContext::restoreGuiDefaults();
 }
 
 void Gui::renderSlot(int slot, int x, int y, float a) {
@@ -489,7 +493,7 @@ void Gui::setScissorRect( const IntRectangle& bbox )
 	GLuint y = minecraft->height - (GLuint)(GuiScale * (bbox.y + bbox.h));
 	GLuint w = (GLuint)(GuiScale * bbox.w);
 	GLuint h = (GLuint)(GuiScale * bbox.h);
-	glScissor(x, y, w, h);
+	GuiRenderContext::setScissorState(true, x, y, w, h);
 }
 
 float Gui::cubeSmoothStep(float percentage, float min, float max) {
@@ -504,33 +508,33 @@ void Gui::renderProgressIndicator( const bool isTouchInterface, const int screen
 	bool itemInUse = currentItem != NULL ? currentItem->getItem() == minecraft->player->getUseItem()->getItem() : false;
 	if (!isTouchInterface || minecraft->options.isJoyTouchArea || (bowEquipped && itemInUse)) {
 		minecraft->textures->loadAndBindTexture("gui/icons.png");
-		glEnable(GL_BLEND);
-		glBlendFunc2(GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_SRC_COLOR);
+		GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		GuiRenderContext::setBlendState(true, GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_SRC_COLOR);
 		blit(screenWidth/2 - 8, screenHeight/2 - 8, 0, 0, 16, 16);
-		glDisable(GL_BLEND);
+		GuiRenderContext::setBlendState(false, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	} else if(!bowEquipped) {
 		const float tprogress = minecraft->gameMode->destroyProgress;
 		const float alpha = Mth::clamp(minecraft->inputHolder->alpha, 0.0f, 1.0f);
 		//LOGI("alpha: %f\n", alpha);
 
 		if (tprogress <= 0 && minecraft->inputHolder->alpha >= 0) {
-			glDisable2(GL_TEXTURE_2D);
-			glEnable2(GL_BLEND);
-			glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			GuiRenderContext::setTexture2DState(false);
+			GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			if (minecraft->hitResult.isHit())
-				glColor4f2(1, 1, 1, 0.8f * alpha);
+				GuiRenderContext::setColor(1, 1, 1, 0.8f * alpha);
 			else
-				glColor4f2(1, 1, 1, Mth::Min(0.4f, alpha*0.4f));
+				GuiRenderContext::setColor(1, 1, 1, Mth::Min(0.4f, alpha*0.4f));
 
 			//LOGI("alpha2: %f\n", alpha);
 			const float x = InvGuiScale * minecraft->inputHolder->mousex;
 			const float y = InvGuiScale * minecraft->inputHolder->mousey;
-			glTranslatef2(x, y, 0);
+			GuiRenderContext::translate(x, y, 0);
 			drawArrayVT(rcFeedbackOuter.vboId, rcFeedbackOuter.vertexCount, 24);
-			glTranslatef2(-x, -y, 0);
+			GuiRenderContext::translate(-x, -y, 0);
 
-			glEnable2(GL_TEXTURE_2D);
-			glDisable(GL_BLEND);
+			GuiRenderContext::setTexture2DState(true);
+			GuiRenderContext::setBlendState(false, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		} else if (tprogress > 0) {
 			const float oProgress = minecraft->gameMode->oDestroyProgress;
 			const float progress = 0.5f * (oProgress + (tprogress - oProgress) * a);
@@ -538,30 +542,31 @@ void Gui::renderProgressIndicator( const bool isTouchInterface, const int screen
 			//static Stopwatch w;
 			//w.start();
 
-			glDisable2(GL_TEXTURE_2D);
-			glColor4f2(1, 1, 1, 0.8f * alpha);
-			glEnable(GL_BLEND);
-			glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			GuiRenderContext::setTexture2DState(false);
+			GuiRenderContext::setColor(1, 1, 1, 0.8f * alpha);
+			GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 			const float x = InvGuiScale * minecraft->inputHolder->mousex;
 			const float y = InvGuiScale * minecraft->inputHolder->mousey;
-			glPushMatrix2();
-			glTranslatef2(x, y, 0);
+			GuiRenderContext::pushMatrix();
+			GuiRenderContext::translate(x, y, 0);
 			drawArrayVT(rcFeedbackOuter.vboId, rcFeedbackOuter.vertexCount, 24);
-			glScalef2(0.5f + progress, 0.5f + progress, 1);
+			GuiRenderContext::scale(0.5f + progress, 0.5f + progress, 1);
 			//glDisable2(GL_CULL_FACE);
-			glColor4f2(1, 1, 1, 1);
-			glBlendFunc2(GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_SRC_COLOR);
+			GuiRenderContext::setColor(1, 1, 1, 1);
+			GuiRenderContext::setBlendState(true, GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_SRC_COLOR);
 			drawArrayVT(rcFeedbackInner.vboId, rcFeedbackInner.vertexCount, 24, GL_TRIANGLE_FAN);
-			glPopMatrix2();
+			GuiRenderContext::popMatrix();
 
-			glDisable(GL_BLEND);
-			glEnable2(GL_TEXTURE_2D);
+			GuiRenderContext::setBlendState(false, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			GuiRenderContext::setTexture2DState(true);
 
 			//w.stop();
 			//w.printEvery(100, "feedback-r ");
 		}
 	}
+	GuiRenderContext::restoreGuiDefaults();
 }
 
 void Gui::renderHearts() {
@@ -673,14 +678,14 @@ void Gui::renderChatMessages( const int screenHeight, unsigned int max, bool isC
 	//            isChatting = true;
 	//        }
 	//
-	//        glEnable(GL_BLEND);
-	//        glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//        glDisable(GL_ALPHA_TEST);
+	//        GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//        GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//        GuiRenderContext::setAlphaTestState(false);
 	//
-	//        glPushMatrix2();
+	//        GuiRenderContext::pushMatrix();
 	//        glTranslatef2(0, screenHeight - 48, 0);
 	//        // glScalef2(1.0f / ssc.scale, 1.0f / ssc.scale, 1);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	int baseY = screenHeight - 48;
 	for (unsigned int i = 0; i < guiMessages.size() && i < max; i++) {
 		if (guiMessages.at(i).ticks < 20 * 10 || isChatting) {
@@ -698,16 +703,17 @@ void Gui::renderChatMessages( const int screenHeight, unsigned int max, bool isC
 				const float y = (float)(baseY - i * 9);
 				std::string msg = guiMessages.at(i).message;
 				this->fill(x, y - 1, x + MAX_MESSAGE_WIDTH, y + 8, (alpha / 2) << 24);
-				glEnable(GL_BLEND);
+				GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 				font->drawShadow(msg, x, y, 0xffffff + (alpha << 24));
+				GuiRenderContext::restoreGuiDefaults();
 			}
 		}
 	}
 }
 
 void Gui::renderToolBar( float a, int ySlot, const int screenWidth ) {
-	glColor4f2(1, 1, 1, .5);
+	GuiRenderContext::setColor(1, 1, 1, .5);
 	minecraft->textures->loadAndBindTexture("gui/gui.png");
 
 	Inventory* inventory = minecraft->player->inventory;
@@ -726,12 +732,12 @@ void Gui::renderToolBar( float a, int ySlot, const int screenWidth ) {
 		int yy = (int)(17.0f * (_currentDropTicks + a) / DropTicks);
 
 		if (_currentDropTicks >= 3) {
-			glColor4f2(0, 1, 0, 0.5f);
+			GuiRenderContext::setColor(0, 1, 0, 0.5f);
 		}
 		fill(x, ySlot+16-yy, x+16, ySlot+16, color);
 	}
 	blit(xBase-1 + 20*inventory->selected, yBase - 1, 0, 22, 24, 22);
-	glColor4f2(1, 1, 1, 1);
+	GuiRenderContext::setColor(1, 1, 1, 1);
 
 	// Flash a slot background
 	if (_flashSlotId >= 0) {
@@ -744,7 +750,7 @@ void Gui::renderToolBar( float a, int ySlot, const int screenWidth ) {
 			fill(x, ySlot, x+16, ySlot+16, color);
 		}
 	}
-	glColor4f2(1, 1, 1, 1);
+	GuiRenderContext::setColor(1, 1, 1, 1);
 
 	//static Stopwatch w;
 	//w.start();
@@ -772,8 +778,8 @@ void Gui::renderToolBar( float a, int ySlot, const int screenWidth ) {
 	t.endOverrideAndDraw();
 
 	// Render damaged items (@todo: investigate if it's faster by drawing in same batch)
-	glDisable2(GL_DEPTH_TEST);
-	glDisable2(GL_TEXTURE_2D);
+	GuiRenderContext::setDepthState(false, true);
+	GuiRenderContext::setTexture2DState(false);
 	t.beginOverride();
 	x = baseItemX;
 	for (int i = 0; i < getNumSlots()-1; i++) {
@@ -781,16 +787,16 @@ void Gui::renderToolBar( float a, int ySlot, const int screenWidth ) {
 		x += 20;
 	}
 	t.endOverrideAndDraw();
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_TEXTURE_2D);
+	GuiRenderContext::setDepthState(true, true);
+	GuiRenderContext::setTexture2DState(true);
 
 	//w.stop();
 	//w.printEvery(100, "gui-slots");
 
 	// Draw count
 	//Tesselator& t = Tesselator::instance;
-	glPushMatrix2();
-	glScalef2(InvGuiScale + InvGuiScale, InvGuiScale + InvGuiScale, 1);
+	GuiRenderContext::pushMatrix();
+	GuiRenderContext::scale(InvGuiScale + InvGuiScale, InvGuiScale + InvGuiScale, 1);
 	const float k = 0.5f * GuiScale;
 
 	t.beginOverride();
@@ -806,5 +812,6 @@ void Gui::renderToolBar( float a, int ySlot, const int screenWidth ) {
 	minecraft->textures->loadAndBindTexture("font/default8.png");
 	t.endOverrideAndDraw();
 
-	glPopMatrix2();
+	GuiRenderContext::popMatrix();
+	GuiRenderContext::restoreGuiDefaults();
 }

@@ -95,6 +95,7 @@
     <ClCompile Include="..\..\src\client\gui\Font.cpp" />
     <ClCompile Include="..\..\src\client\gui\Gui.cpp" />
     <ClCompile Include="..\..\src\client\gui\GuiComponent.cpp" />
+    <ClCompile Include="..\..\src\client\gui\GuiRenderContext.cpp" />
     <ClCompile Include="..\..\src\client\gui\Screen.cpp" />
     <ClCompile Include="..\..\src\client\gui\screens\ChatScreen.cpp" />
     <ClCompile Include="..\..\src\client\gui\screens\ConfirmScreen.cpp" />

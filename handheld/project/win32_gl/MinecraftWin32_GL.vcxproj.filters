@@ -540,6 +540,9 @@
     <ClCompile Include="..\..\src\client\gui\GuiComponent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\client\gui\GuiRenderContext.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\client\gui\Screen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
