@@ -7,6 +7,7 @@
 #include "../renderer/TileRenderer.h"
 #include "../renderer/LevelRenderer.h"
 #include "../renderer/GameRenderer.h"
+#include "../renderer/RenderBackend.h"
 #include "../renderer/entity/ItemRenderer.h"
 #include "../player/input/IInputHolder.h"
 #include "../gamemode/GameMode.h"
@@ -21,6 +22,17 @@
 #include "../../world/level/Level.h"
 #include "../../world/PosTranslator.h"
 #include "GuiRenderContext.h"
+
+namespace {
+
+const unsigned int TRIANGLE_FAN_MODE = 0x0006;
+
+inline void drawArrayVTCompat(unsigned int bufferId, int vertices, int vertexSize, unsigned int mode = RB_TRIANGLES) {
+	RenderBackend::bindArrayBuffer(bufferId);
+	RenderBackend::submitTexturedMesh(vertices, vertexSize, mode);
+}
+
+}
 
 float Gui::InvGuiScale = 1.0f / 3.0f;
 float Gui::GuiScale = 1.0f / Gui::InvGuiScale;
@@ -385,7 +397,7 @@ void Gui::onConfigChanged( const Config& c ) {
 	//
 	// Create the inner feedback ring
 	//
-	t.begin(GL_TRIANGLE_FAN);
+	t.begin(TRIANGLE_FAN_MODE);
 	t.vertex(0, 0, 0);
 	for (int i = 0; i < steps + 1; ++i) {
 		float a = -i * fstep;
@@ -530,7 +542,7 @@ void Gui::renderProgressIndicator( const bool isTouchInterface, const int screen
 			const float x = InvGuiScale * minecraft->inputHolder->mousex;
 			const float y = InvGuiScale * minecraft->inputHolder->mousey;
 			GuiRenderContext::translate(x, y, 0);
-			drawArrayVT(rcFeedbackOuter.vboId, rcFeedbackOuter.vertexCount, 24);
+			drawArrayVTCompat(rcFeedbackOuter.vboId, rcFeedbackOuter.vertexCount, 24);
 			GuiRenderContext::translate(-x, -y, 0);
 
 			GuiRenderContext::setTexture2DState(true);
@@ -551,11 +563,11 @@ void Gui::renderProgressIndicator( const bool isTouchInterface, const int screen
 			const float y = InvGuiScale * minecraft->inputHolder->mousey;
 			GuiRenderContext::pushMatrix();
 			GuiRenderContext::translate(x, y, 0);
-			drawArrayVT(rcFeedbackOuter.vboId, rcFeedbackOuter.vertexCount, 24);
+			drawArrayVTCompat(rcFeedbackOuter.vboId, rcFeedbackOuter.vertexCount, 24);
 			GuiRenderContext::scale(0.5f + progress, 0.5f + progress, 1);
 			GuiRenderContext::setColor(1, 1, 1, 1);
 			GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
-			drawArrayVT(rcFeedbackInner.vboId, rcFeedbackInner.vertexCount, 24, GL_TRIANGLE_FAN);
+			drawArrayVTCompat(rcFeedbackInner.vboId, rcFeedbackInner.vertexCount, 24, TRIANGLE_FAN_MODE);
 			GuiRenderContext::popMatrix();
 
 			GuiRenderContext::setBlendState(false, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
