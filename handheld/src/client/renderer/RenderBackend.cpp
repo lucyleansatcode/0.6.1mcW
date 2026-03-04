@@ -43,6 +43,11 @@ void setCullState(bool enabled);
 void setBlendState(bool enabled, unsigned int srcFactor, unsigned int dstFactor);
 void setAlphaTestState(bool enabled);
 void setScissorState(bool enabled, int x, int y, int width, int height);
+void submitTexturedMesh(int vertexCount, int vertexStride, unsigned int mode);
+void bindArrayBuffer(unsigned int bufferId);
+void uploadArrayBuffer(const void* data, int bytes, bool dynamic);
+void genBuffers(int count, unsigned int* outIds);
+void deleteBuffers(int count, const unsigned int* ids);
 }
 #else
 namespace {
@@ -371,10 +376,7 @@ void setScissorState(bool enabled, int x, int y, int width, int height) {
 }
 void submitTexturedMesh(int vertexCount, int vertexStride, unsigned int mode) {
 #if defined(__WII__)
-    (void)vertexCount;
-    (void)vertexStride;
-    (void)mode;
-    // GX submission is handled by the fixed-function TEV+FIFO code path.
+    WiiRenderer::submitTexturedMesh(vertexCount, vertexStride, mode);
 #else
     glTexCoordPointer2(2, GL_FLOAT, vertexStride, (GLvoid*)(3 * 4));
     glEnableClientState2(GL_TEXTURE_COORD_ARRAY);
@@ -388,7 +390,7 @@ void submitTexturedMesh(int vertexCount, int vertexStride, unsigned int mode) {
 
 void bindArrayBuffer(unsigned int bufferId) {
 #if defined(__WII__)
-    (void)bufferId;
+    WiiRenderer::bindArrayBuffer(bufferId);
 #else
     glBindBuffer2(GL_ARRAY_BUFFER, bufferId);
 #endif
@@ -396,9 +398,7 @@ void bindArrayBuffer(unsigned int bufferId) {
 
 void uploadArrayBuffer(const void* data, int bytes, bool dynamic) {
 #if defined(__WII__)
-    (void)data;
-    (void)bytes;
-    (void)dynamic;
+    WiiRenderer::uploadArrayBuffer(data, bytes, dynamic);
 #else
     glBufferData2(GL_ARRAY_BUFFER, bytes, data, dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
 #endif
@@ -406,8 +406,7 @@ void uploadArrayBuffer(const void* data, int bytes, bool dynamic) {
 
 void genBuffers(int count, unsigned int* outIds) {
 #if defined(__WII__)
-    (void)count;
-    (void)outIds;
+    WiiRenderer::genBuffers(count, outIds);
 #else
     glGenBuffers2(count, outIds);
 #endif
@@ -415,8 +414,7 @@ void genBuffers(int count, unsigned int* outIds) {
 
 void deleteBuffers(int count, const unsigned int* ids) {
 #if defined(__WII__)
-    (void)count;
-    (void)ids;
+    WiiRenderer::deleteBuffers(count, ids);
 #else
     glDeleteBuffers(count, ids);
 #endif

@@ -5,6 +5,7 @@
 #include <gccore.h>
 
 #include <cassert>
+#include <cstring>
 #include <unordered_map>
 #include <vector>
 
@@ -24,6 +25,12 @@ struct WiiTexture {
     WiiTexture() : initialized(false) {}
 };
 
+struct ArrayBuffer {
+    std::vector<unsigned char> data;
+    bool dynamic;
+    ArrayBuffer() : dynamic(false) {}
+};
+
 struct ModelMtxState {
     Mtx m;
 };
@@ -34,6 +41,9 @@ struct ProjMtxState {
 };
 
 std::unordered_map<TextureId, WiiTexture> s_textures;
+std::unordered_map<unsigned int, ArrayBuffer> s_arrayBuffers;
+unsigned int s_nextBufferId = 1;
+unsigned int s_boundArrayBuffer = 0;
 Mtx s_modelMatrix;
 Mtx44 s_projectionMatrix;
 std::vector<ModelMtxState> s_modelStack;
@@ -42,6 +52,9 @@ int s_projectionType = GX_PERSPECTIVE;
 
 const int kDefaultScissorWidth = 640;
 const int kDefaultScissorHeight = 480;
+
+const unsigned int kGlTriangles = 0x0004;
+const unsigned int kGlTriangleFan = 0x0006;
 
 void debugAssertUnsupported(bool condition, const char* message) {
 #if !defined(NDEBUG)
@@ -78,6 +91,48 @@ bool mapBlendFactor(unsigned int factor, u8* outFactor) {
     }
 
     return false;
+}
+
+u8 mapPrimitiveMode(unsigned int mode) {
+    switch (mode) {
+    case kGlTriangles:
+        return GX_TRIANGLES;
+    case kGlTriangleFan:
+        return GX_TRIANGLEFAN;
+    default:
+        LOGW("RenderBackend(Wii): unsupported primitive mode 0x%X, using triangles\n", mode);
+        debugAssertUnsupported(false, "Unsupported primitive mode requested");
+        return GX_TRIANGLES;
+    }
+}
+
+ArrayBuffer* findBoundArrayBuffer() {
+    std::unordered_map<unsigned int, ArrayBuffer>::iterator it = s_arrayBuffers.find(s_boundArrayBuffer);
+    if (it == s_arrayBuffers.end()) {
+        return 0;
+    }
+    return &it->second;
+}
+
+void emitVertex(const unsigned char* raw, int vertexStride, bool hasColor) {
+    const float* pos = reinterpret_cast<const float*>(raw);
+    const float* uv = reinterpret_cast<const float*>(raw + 3 * sizeof(float));
+
+    GX_Position3f32(pos[0], pos[1], pos[2]);
+    GX_TexCoord2f32(uv[0], uv[1]);
+
+    if (hasColor) {
+        const unsigned int packed = *reinterpret_cast<const unsigned int*>(raw + 5 * sizeof(float));
+        const u8 r = static_cast<u8>(packed & 0xFFu);
+        const u8 g = static_cast<u8>((packed >> 8) & 0xFFu);
+        const u8 b = static_cast<u8>((packed >> 16) & 0xFFu);
+        const u8 a = static_cast<u8>((packed >> 24) & 0xFFu);
+        GX_Color4u8(r, g, b, a);
+    } else {
+        GX_Color4u8(255, 255, 255, 255);
+    }
+
+    (void)vertexStride;
 }
 
 void applyModelMatrix() {
@@ -134,6 +189,13 @@ void init() {
     GX_SetCullMode(GX_CULL_BACK);
     GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_TRUE);
     GX_SetBlendMode(GX_BM_NONE, GX_BL_ONE, GX_BL_ZERO, GX_LO_CLEAR);
+    GX_ClearVtxDesc();
+    GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
+    GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
+    GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
+    GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+    GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
+    GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
 
     guMtxIdentity(s_modelMatrix);
     guMtx44Identity(s_projectionMatrix);
@@ -333,6 +395,87 @@ void setScissorState(bool enabled, int x, int y, int width, int height) {
     const int clampedX = x < 0 ? 0 : x;
     const int clampedY = y < 0 ? 0 : y;
     GX_SetScissor(clampedX, clampedY, width, height);
+}
+
+void submitTexturedMesh(int vertexCount, int vertexStride, unsigned int mode) {
+    if (vertexCount <= 0 || vertexStride < static_cast<int>(5 * sizeof(float))) {
+        return;
+    }
+
+    ArrayBuffer* bound = findBoundArrayBuffer();
+    if (!bound || bound->data.empty()) {
+        LOGW("RenderBackend(Wii): submitTexturedMesh called without uploaded array buffer (id=%u)\n", s_boundArrayBuffer);
+        debugAssertUnsupported(false, "submitTexturedMesh requires a bound uploaded array buffer");
+        return;
+    }
+
+    const size_t requiredBytes = static_cast<size_t>(vertexCount) * static_cast<size_t>(vertexStride);
+    if (requiredBytes > bound->data.size()) {
+        LOGW("RenderBackend(Wii): vertex submission exceeds uploaded buffer (%u > %u bytes)\n",
+             static_cast<unsigned int>(requiredBytes),
+             static_cast<unsigned int>(bound->data.size()));
+        debugAssertUnsupported(false, "Vertex submission exceeded uploaded array buffer size");
+        return;
+    }
+
+    const bool hasColor = vertexStride >= static_cast<int>(6 * sizeof(float));
+    const u8 gxMode = mapPrimitiveMode(mode);
+    const unsigned char* cursor = &bound->data[0];
+
+    GX_Begin(gxMode, GX_VTXFMT0, static_cast<u16>(vertexCount));
+    for (int i = 0; i < vertexCount; ++i) {
+        emitVertex(cursor, vertexStride, hasColor);
+        cursor += vertexStride;
+    }
+    GX_End();
+}
+
+void bindArrayBuffer(unsigned int bufferId) {
+    s_boundArrayBuffer = bufferId;
+}
+
+void uploadArrayBuffer(const void* data, int bytes, bool dynamic) {
+    if (s_boundArrayBuffer == 0) {
+        LOGW("RenderBackend(Wii): uploadArrayBuffer called with no bound buffer\n");
+        debugAssertUnsupported(false, "uploadArrayBuffer requires a bound buffer");
+        return;
+    }
+
+    ArrayBuffer& buffer = s_arrayBuffers[s_boundArrayBuffer];
+    buffer.dynamic = dynamic;
+    if (!data || bytes <= 0) {
+        buffer.data.clear();
+        return;
+    }
+
+    buffer.data.resize(static_cast<size_t>(bytes));
+    std::memcpy(&buffer.data[0], data, static_cast<size_t>(bytes));
+}
+
+void genBuffers(int count, unsigned int* outIds) {
+    if (!outIds || count <= 0) {
+        return;
+    }
+
+    for (int i = 0; i < count; ++i) {
+        const unsigned int id = s_nextBufferId++;
+        s_arrayBuffers[id] = ArrayBuffer();
+        outIds[i] = id;
+    }
+}
+
+void deleteBuffers(int count, const unsigned int* ids) {
+    if (!ids || count <= 0) {
+        return;
+    }
+
+    for (int i = 0; i < count; ++i) {
+        const unsigned int id = ids[i];
+        s_arrayBuffers.erase(id);
+        if (s_boundArrayBuffer == id) {
+            s_boundArrayBuffer = 0;
+        }
+    }
 }
 
 } // namespace WiiRenderer
