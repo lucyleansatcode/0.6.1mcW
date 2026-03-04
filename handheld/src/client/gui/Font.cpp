@@ -112,7 +112,7 @@ int Font::width( const std::string& str )
 	int len = 0;
 
 	for (unsigned int i = 0; i < str.length(); i++) {
-		if (str[i] == '§') {
+		if (str[i] == '\xA7') {
 			i++;
 		} else {
 			//int ch = SharedConstants.acceptableLetters.indexOf(str.charAt(i));
@@ -151,7 +151,7 @@ std::string Font::sanitize( const std::string& str )
 	int j = 0;
 
 	for (unsigned int i = 0; i < str.length(); i++) {
-		if (str[i] == '§') {
+		if (str[i] == '\xA7') {
 			i++;
 			//} else if (SharedConstants.acceptableLetters.indexOf(str.charAt(i)) >= 0) {
 		} else {
@@ -219,7 +219,7 @@ void Font::drawSlow( const char* str, float x, float y, int color, bool darken /
 	static const std::string hex("0123456789abcdef");
 
 	while (unsigned char ch = *(str++)) {
-		if (ch == '§') {
+		if (ch == '\xA7') {
 			if (!*str) break;
 			int cc = (int)hex.find((char)tolower(*str++));
 			if (cc < 0 || cc > 15) cc = 15;
