@@ -2,8 +2,10 @@
 #define NET_MINECRAFT_CLIENT_RENDERER_RENDER_COMPAT_H
 
 // Legacy GL compatibility helpers kept for non-Wii targets.
-// Wii builds use the GX RenderBackend path and do not compile render_compat.cpp.
-#if !defined(WII) && !defined(__WII__)
+// Wii builds use the GX RenderBackend path and must not include this header.
+#if defined(WII) || defined(__WII__)
+#error "render_compat.h is only available for non-Wii legacy OpenGL paths"
+#endif
 
 #include <GLES/gl.h>
 
@@ -20,17 +22,5 @@ void MultiplyMatrices4by4OpenGL_FLOAT(float *result, float *matrix1, float *matr
 void MultiplyMatrixByVector4by4OpenGL_FLOAT(float *resultvector, const float *matrix, const float *pvector);
 int glhInvertMatrixf2(float *m, float *out);
 int glhUnProjectf(float winx, float winy, float winz, float *modelview, float *projection, int *viewport, float *objectCoordinate);
-
-#else
-
-#include <gccore.h>
-
-// Wii uses GX, but some shared renderer headers still carry GL-style type names.
-// Map those names to libogc scalar types so the shared declarations stay buildable.
-typedef u32 GLuint;
-typedef s32 GLsizei;
-typedef f32 GLfloat;
-
-#endif
 
 #endif

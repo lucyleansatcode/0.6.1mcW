@@ -1,7 +1,7 @@
 #include "RolledSelectionListH.h"
 #include "../../Minecraft.h"
 #include "../../renderer/Tesselator.h"
-#include "../../renderer/render_compat.h"
+#include "../GuiRenderContext.h"
 #include "../../../platform/input/Mouse.h"
 #include "../../../platform/input/Multitouch.h"
 #include "../../../util/Mth.h"
@@ -207,7 +207,7 @@ void RolledSelectionListH::render( int xm, int ym, float a )
 			float y0 = height / 2.0f - HalfHeight - 4; //@kindle-res:+2
 			float y1 = height / 2.0f + HalfHeight - 4; //@kindle-res:-6
 			glColor4f2(1, 1, 1, 1);
-			glDisable2(GL_TEXTURE_2D);
+			GuiRenderContext::setTexture2DState(false);
 
 			int ew = 0;
 			int color = 0x808080;
@@ -229,12 +229,12 @@ void RolledSelectionListH::render( int xm, int ym, float a )
 			t.vertex(x + h, y0 + 1, 0);
 
 			t.draw();
-			glEnable2(GL_TEXTURE_2D);
+			GuiRenderContext::setTexture2DState(true);
 		}
 		renderItem(i, (int)x, rowY, (int)h, t);
 	}
 
-	glDisable2(GL_DEPTH_TEST);
+	GuiRenderContext::setDepthState(false, false);
 
 	if (_renderTopBorder)
 		renderHoleBackground(0, y0, 255, 255);
@@ -246,7 +246,7 @@ void RolledSelectionListH::render( int xm, int ym, float a )
 	//glDisable2(GL_ALPHA_TEST);
 	//glShadeModel2(GL_SMOOTH);
 
-	//glDisable2(GL_TEXTURE_2D);
+	//GuiRenderContext::setTexture2DState(false);
 
 	//const int d = 4;
 	//t.begin();
@@ -269,8 +269,8 @@ void RolledSelectionListH::render( int xm, int ym, float a )
 
 	//renderDecorations(xm, ym);
 
-	//glEnable2(GL_TEXTURE_2D);
-	glEnable2(GL_DEPTH_TEST);
+	//GuiRenderContext::setTexture2DState(true);
+	GuiRenderContext::setDepthState(true, true);
 
 	//glShadeModel2(GL_FLAT);
 	//glEnable2(GL_ALPHA_TEST);

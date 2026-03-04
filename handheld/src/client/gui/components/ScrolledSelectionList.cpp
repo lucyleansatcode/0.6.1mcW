@@ -1,7 +1,7 @@
 #include "ScrolledSelectionList.h"
 #include "../../Minecraft.h"
 #include "../../renderer/Tesselator.h"
-#include "../../renderer/render_compat.h"
+#include "../GuiRenderContext.h"
 #include "../../../platform/input/Mouse.h"
 #include "../../renderer/Textures.h"
 
@@ -162,7 +162,7 @@ void ScrolledSelectionList::render( int xm, int ym, float a )
 			float x0 = width / 2.0f - (92 + 16 + 2);
 			float x1 = width / 2.0f + (92 + 16 + 2);
 			glColor4f2(1, 1, 1, 1);
-			glDisable2(GL_TEXTURE_2D);
+			GuiRenderContext::setTexture2DState(false);
 			t.begin();
 			t.color(0x808080);
 			t.vertexUV(x0, y + h + 2, 0, 0, 1);
@@ -177,14 +177,14 @@ void ScrolledSelectionList::render( int xm, int ym, float a )
 			t.vertexUV(x0 + 1, y - 1, 0, 0, 0);
 
 			t.draw();
-			glEnable2(GL_TEXTURE_2D);
+			GuiRenderContext::setTexture2DState(true);
 		}
 
 		renderItem(i, rowX, (int)y, (int)h, t);
 
 	}
 
-	glDisable2(GL_DEPTH_TEST);
+	GuiRenderContext::setDepthState(false, false);
 
 
 	int d = 4;
@@ -192,12 +192,11 @@ void ScrolledSelectionList::render( int xm, int ym, float a )
 	renderHoleBackground(0, y0, 255, 255);
 	renderHoleBackground(y1, (float)height, 255, 255);
 
-	glEnable2(GL_BLEND);
-	glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glDisable2(GL_ALPHA_TEST);
-	glShadeModel2(GL_SMOOTH);
+	GuiRenderContext::setBlendState(true, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
+	GuiRenderContext::setAlphaTestState(false);
+	GuiRenderContext::setShadeModel(GuiRenderContext::ShadeSmooth);
 
-	glDisable2(GL_TEXTURE_2D);
+	GuiRenderContext::setTexture2DState(false);
 
 	t.begin();
 	t.color(0x000000, 0);
@@ -256,12 +255,12 @@ void ScrolledSelectionList::render( int xm, int ym, float a )
 	renderDecorations(xm, ym);
 
 
-	glEnable2(GL_TEXTURE_2D);
-	glEnable2(GL_DEPTH_TEST);
+	GuiRenderContext::setTexture2DState(true);
+	GuiRenderContext::setDepthState(true, true);
 
-	glShadeModel2(GL_FLAT);
-	glEnable2(GL_ALPHA_TEST);
-	glDisable2(GL_BLEND);
+	GuiRenderContext::setShadeModel(GuiRenderContext::ShadeFlat);
+	GuiRenderContext::setAlphaTestState(true);
+	GuiRenderContext::setBlendState(false, GuiRenderContext::BlendSrcAlpha, GuiRenderContext::BlendOneMinusSrcAlpha);
 }
 
 void ScrolledSelectionList::renderHoleBackground( float y0, float y1, int a0, int a1 )

@@ -1,6 +1,6 @@
 #include "ItemPane.h"
 #include "../Gui.h"
-#include "../../renderer/render_compat.h"
+#include "../GuiRenderContext.h"
 #include "../../renderer/Tesselator.h"
 #include "NinePatch.h"
 #include "../../renderer/entity/ItemRenderer.h"
@@ -55,10 +55,10 @@ void ItemPane::renderBatch( std::vector<GridItem>& items, float alpha )
 	if (cat.empty()) return;
 
 	glEnable2(GL_SCISSOR_TEST);
-	GLuint x = (GLuint)(screenScale * bbox.x);
-	GLuint y = physicalScreenHeight - (GLuint)(screenScale * (bbox.y + bbox.h));
-	GLuint w = (GLuint)(screenScale * bbox.w);
-	GLuint h = (GLuint)(screenScale * bbox.h);
+	unsigned int x = (unsigned int)(screenScale * bbox.x);
+	unsigned int y = physicalScreenHeight - (unsigned int)(screenScale * (bbox.y + bbox.h));
+	unsigned int w = (unsigned int)(screenScale * bbox.w);
+	unsigned int h = (unsigned int)(screenScale * bbox.h);
 	glScissor(x, y, w, h);
 
 	Tesselator& t = Tesselator::instance;

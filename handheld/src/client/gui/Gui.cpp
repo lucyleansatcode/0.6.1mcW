@@ -489,10 +489,10 @@ void Gui::postError( int errCode )
 
 void Gui::setScissorRect( const IntRectangle& bbox )
 {
-	GLuint x = (GLuint)(GuiScale * bbox.x);
-	GLuint y = minecraft->height - (GLuint)(GuiScale * (bbox.y + bbox.h));
-	GLuint w = (GLuint)(GuiScale * bbox.w);
-	GLuint h = (GLuint)(GuiScale * bbox.h);
+	unsigned int x = (unsigned int)(GuiScale * bbox.x);
+	unsigned int y = minecraft->height - (unsigned int)(GuiScale * (bbox.y + bbox.h));
+	unsigned int w = (unsigned int)(GuiScale * bbox.w);
+	unsigned int h = (unsigned int)(GuiScale * bbox.h);
 	GuiRenderContext::setScissorState(true, x, y, w, h);
 }
 
