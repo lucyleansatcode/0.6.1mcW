@@ -4,6 +4,7 @@
 #include "Mth.h"
 #include "../client/gui/Font.h"
 #include "../client/renderer/render_compat.h"
+#include "../client/renderer/RenderBackend.h"
 #include "../client/renderer/Tesselator.h"
 #include "../client/Minecraft.h"
 
@@ -69,10 +70,10 @@ void PerfRenderer::renderFpsMeter( float tickTime )
 	glOrthof(0, (GLfloat)_mc->width, (GLfloat)_mc->height, 0, 1000, 3000);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity2();
-	glTranslatef2(0, 0, -2000);
+	RenderBackend::translateModel(0, 0, -2000);
 
 	glLineWidth(1);
-	glDisable2(GL_TEXTURE_2D);
+	RenderBackend::setTextureState(false);
 	Tesselator& t = Tesselator::instance;
 
 	t.begin(GL_TRIANGLES);
@@ -137,7 +138,7 @@ void PerfRenderer::renderFpsMeter( float tickTime )
 	int r = 160;
 	int x = _mc->width - r - 10;
 	int y = _mc->height - r * 2;
-	glEnable(GL_BLEND);
+	RenderBackend::setBlendEnabled(true);
 	t.begin();
 	t.color(0x000000, 200);
 	t.vertex(x - r * 1.1f, y - r * 0.6f - 16, 0);
@@ -145,9 +146,9 @@ void PerfRenderer::renderFpsMeter( float tickTime )
 	t.vertex(x + r * 1.1f, y + r * 2.0f, 0);
 	t.vertex(x + r * 1.1f, y - r * 0.6f - 16, 0);
 	t.draw();
-	glDisable(GL_BLEND);
+	RenderBackend::setBlendEnabled(false);
 
-	glDisable(GL_CULL_FACE);
+	RenderBackend::setCullState(false);
 
 	float totalPercentage = 0;
 	for (unsigned int i = 0; i < list.size(); i++) {
@@ -180,7 +181,7 @@ void PerfRenderer::renderFpsMeter( float tickTime )
 		totalPercentage += result.percentage;
 	}
 
-	glEnable(GL_TEXTURE_2D);
+	RenderBackend::setTextureState(true);
 
 	{
 		std::stringstream msg;
