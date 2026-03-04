@@ -6,6 +6,7 @@
 #include "../../renderer/Tesselator.h"
 #include "../../renderer/Textures.h"
 #include "../../renderer/GameRenderer.h"
+#include "../../renderer/RenderBackend.h"
 #include "../components/Button.h"
 #include "../../../network/Packet.h"
 #include "../../../network/RakNetInstance.h"
@@ -50,17 +51,15 @@ bool TextEditScreen::handleBackEvent( bool isDown ) {
 void TextEditScreen::render( int xm, int ym, float a ) {
 	glDepthMask(GL_FALSE);
 	renderBackground();
-	glPushMatrix();
+	RenderBackend::pushModelMatrix();
 	glDepthMask(GL_TRUE);
 	glDisable(GL_CULL_FACE);
-	glLoadIdentity();
+	RenderBackend::loadModelIdentity();
 	Tesselator& t = Tesselator::instance;
 
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
-	glOrthof(0.0f, (float)minecraft->width, (float)minecraft->height, 0,  -1, 1);
-	glMatrixMode(GL_MODELVIEW);
+	RenderBackend::pushProjectionMatrix();
+	RenderBackend::loadProjectionIdentity();
+	RenderBackend::setOrtho(0.0f, (float)minecraft->width, (float)minecraft->height, 0, -1, 1);
 	
 	minecraft->textures->loadAndBindTexture("item/sign.png");
     glColor4f2(1, 1, 1, 1);
@@ -69,8 +68,8 @@ void TextEditScreen::render( int xm, int ym, float a ) {
     static float maxUV[] = {0.39063f, 0.4374f};
 	float scale = ((minecraft->height / 2) / 32) * 0.9f;
 	
-	glTranslatef(minecraft->width / 2.0f, 5.0f, 0.0f);
-	glScalef2(scale,scale,1);
+	RenderBackend::translateModel(minecraft->width / 2.0f, 5.0f, 0.0f);
+	RenderBackend::scaleModel(scale, scale, 1);
 	t.begin(GL_QUADS);
 	t.vertexUV(-32, 0, 0.0f,minUV[0],minUV[1]);
 	t.vertexUV(32,  0, 0.0f, maxUV[0], minUV[1]);
@@ -81,8 +80,8 @@ void TextEditScreen::render( int xm, int ym, float a ) {
 	sign->selectedLine = line;
 	float textScale = 8.0f / 11.0f;
 	
-	glTranslatef(0, 2 ,0);
-	glScalef2(textScale, textScale, 1);
+	RenderBackend::translateModel(0, 2, 0);
+	RenderBackend::scaleModel(textScale, textScale, 1);
 	for(int i = 0; i < 4; ++i) {
 		//drawCenteredString(font, sign->messages[a], 32.0f, 10 * a, 0xFF000000);
 		std::string msg = sign->messages[i];
@@ -96,11 +95,9 @@ void TextEditScreen::render( int xm, int ym, float a ) {
 	sign->selectedLine  = -1;
 	//font->draw("Hej", minecraft->width / 2, 100, 0xFFFFFFFF, false);
 	
-	glPopMatrix();
+	RenderBackend::popModelMatrix();
 	glEnable(GL_CULL_FACE);
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
+	RenderBackend::popProjectionMatrix();
 
 	//glEnable(GL_DEPTH_TEST);
 	super::render(xm, ym, a);

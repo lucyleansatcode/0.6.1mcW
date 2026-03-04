@@ -12,6 +12,7 @@
 #include "../../../world/level/Level.h"
 #include "../../../network/RakNetInstance.h"
 #include "../../renderer/entity/EntityRenderDispatcher.h"
+#include "../../renderer/RenderBackend.h"
 #include "../../../world/item/ArmorItem.h"
 
 static void setIfNotSet(bool& ref, bool condition) {
@@ -310,13 +311,13 @@ void ArmorScreen::takeAndClearSlot( int slot ) {
 
 void ArmorScreen::renderPlayer(float xo, float yo) {
 	// Push GL and player state
-	glPushMatrix();
+	RenderBackend::pushModelMatrix();
 
-	glTranslatef(xo, yo, -200);
+	RenderBackend::translateModel(xo, yo, -200);
 	float ss = 45;
-	glScalef(-ss, ss, ss);
+	RenderBackend::scaleModel(-ss, ss, ss);
 
-	glRotatef(180, 0, 0, 1);
+	RenderBackend::rotateModel(180, 0, 0, 1);
 	//glDisable(GL_DEPTH_TEST);
 
 	Player* player = (Player*) minecraft->player;
@@ -329,18 +330,18 @@ void ArmorScreen::renderPlayer(float xo, float yo) {
 	float xd = 10 * Mth::sin(t);//(xo + 51) - xm;
 	float yd = 10 * Mth::cos(t * 0.05f);//(yo + 75 - 50) - ym;
 
-	glRotatef(45 + 90, 0, 1, 0);
-	glRotatef(-45 - 90, 0, 1, 0);
+	RenderBackend::rotateModel(45 + 90, 0, 1, 0);
+	RenderBackend::rotateModel(-45 - 90, 0, 1, 0);
 
 	const float xtan = Mth::atan(xd / 40.0f) * +20;
 	const float ytan = Mth::atan(yd / 40.0f) * -20;
 
-	glRotatef(ytan, 1, 0, 0);
+	RenderBackend::rotateModel(ytan, 1, 0, 0);
 
 	player->yBodyRot = xtan;
 	player->yRot = xtan + xtan;
 	player->xRot = ytan;
-	glTranslatef(0, player->heightOffset, 0);
+	RenderBackend::translateModel(0, player->heightOffset, 0);
 
 	// Push walking anim
 	float oldWAP = player->walkAnimPos;
@@ -366,5 +367,5 @@ void ArmorScreen::renderPlayer(float xo, float yo) {
 	player->yRot = oyr;
 	player->xRot = oxr;
 
-	glPopMatrix();
+	RenderBackend::popModelMatrix();
 }
