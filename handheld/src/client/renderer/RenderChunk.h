@@ -3,7 +3,14 @@
 
 //package net.minecraft.client.renderer;
 
+#if defined(WII) || defined(__WII__)
+// Wii builds do not use legacy OpenGL headers.
+// Keep RenderChunk self-contained by providing the minimal scalar types it needs.
+typedef unsigned int GLuint;
+typedef int GLsizei;
+#else
 #include "render_compat.h"
+#endif
 #include "../../world/phys/Vec3.h"
 
 class RenderChunk
