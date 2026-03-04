@@ -181,6 +181,32 @@ void setBlendState(bool enabled, unsigned int srcFactor, unsigned int dstFactor)
 #endif
 }
 
+
+void setAlphaTestState(bool enabled) {
+#if defined(__WII__)
+    // Alpha test state is handled by the TEV pipeline for GUI rendering.
+    (void)enabled;
+#else
+    if (enabled) glEnable2(GL_ALPHA_TEST); else glDisable2(GL_ALPHA_TEST);
+#endif
+}
+
+void setScissorState(bool enabled, int x, int y, int width, int height) {
+#if defined(__WII__)
+    (void)enabled;
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
+#else
+    if (enabled) {
+        glEnable2(GL_SCISSOR_TEST);
+        glScissor(x, y, width, height);
+    } else {
+        glDisable2(GL_SCISSOR_TEST);
+    }
+#endif
+}
 void submitTexturedMesh(int vertexCount, int vertexStride, unsigned int mode) {
 #if defined(__WII__)
     (void)vertexCount;

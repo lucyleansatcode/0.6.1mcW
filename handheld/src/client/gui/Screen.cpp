@@ -7,6 +7,7 @@
 #include "../../platform/input/Keyboard.h"
 #include "../../platform/input/Mouse.h"
 #include "../renderer/Textures.h"
+#include "GuiRenderContext.h"
 
 Screen::Screen()
 :   passEvents(false),
@@ -117,10 +118,10 @@ void Screen::renderBackground( int vo )
 void Screen::renderDirtBackground( int vo )
 {
 	//glDisable2(GL_LIGHTING);
-	glDisable2(GL_FOG);
+	GuiRenderContext::setFogState(false);
 	Tesselator& t = Tesselator::instance;
 	minecraft->textures->loadAndBindTexture("gui/background.png");
-	glColor4f2(1, 1, 1, 1);
+	GuiRenderContext::setColor(1, 1, 1, 1);
 	float s = 32;
 	float fvo = (float) vo;
 	t.begin();
@@ -130,6 +131,7 @@ void Screen::renderDirtBackground( int vo )
 	t.vertexUV((float)width, 0, 0, (float)width / s, 0 + fvo);
 	t.vertexUV(0, 0, 0, 0, 0 + fvo);
 	t.draw();
+	GuiRenderContext::restoreGuiDefaults();
 }
 
 bool Screen::isPauseScreen()

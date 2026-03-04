@@ -40,6 +40,7 @@ SOURCES := ../../src/main.cpp \
 ../../src/client/gui/Font.cpp \
 ../../src/client/gui/Gui.cpp \
 ../../src/client/gui/GuiComponent.cpp \
+../../src/client/gui/GuiRenderContext.cpp \
 ../../src/client/gui/Screen.cpp \
 ../../src/client/gui/screens/ScreenChooser.cpp \
 ../../src/client/gui/screens/ArmorScreen.cpp \

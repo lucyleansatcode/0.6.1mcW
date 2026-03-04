@@ -32,7 +32,7 @@ void updateTexture2D(int x, int y, int w, int h, const void* data, int format, i
 
 void setDepthState(bool enabled, bool writeMask);
 void setCullState(bool enabled);
-void setBlendState(bool enabled);              // Wii uses fixed blend factors internally
+void setBlendState(bool enabled, unsigned int srcFactor, unsigned int dstFactor);
 void setAlphaTestState(bool enabled);
 void setScissorState(bool enabled, int x, int y, int width, int height);
 

@@ -1,7 +1,7 @@
 #include "GuiComponent.h"
 
 #include "../renderer/Tesselator.h"
-#include "../renderer/render_compat.h"
+#include "GuiRenderContext.h"
 #include "Font.h"
 
 
@@ -65,9 +65,9 @@ void GuiComponent::fill( float x0, float y0, float x1, float y1, int col )
 	//glColor4f2(r, g, b, a);
 
 	Tesselator& t = Tesselator::instance;
-	glEnable2(GL_BLEND);
-	glDisable2(GL_TEXTURE_2D);
-	glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GuiRenderContext::setTexture2DState(false);
+	GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
 	//LOGI("col: %f, %f, %f, %f\n", r, g, b, a);
 	t.begin();
@@ -78,8 +78,7 @@ void GuiComponent::fill( float x0, float y0, float x1, float y1, int col )
 	t.vertex(x1, y0, 0);
 	t.vertex(x0, y0, 0);
 	t.draw();
-	glEnable2(GL_TEXTURE_2D);
-	glDisable2(GL_BLEND);
+	GuiRenderContext::restoreGuiDefaults();
 }
 
 void GuiComponent::fillGradient( int x0, int y0, int x1, int y1, int col1, int col2 ) {
@@ -96,11 +95,11 @@ void GuiComponent::fillGradient( float x0, float y0, float x1, float y1, int col
 	float r2 = ((col2 >> 16) & 0xff) / 255.0f;
 	float g2 = ((col2 >> 8) & 0xff) / 255.0f;
 	float b2 = ((col2) & 0xff) / 255.0f;
-	glDisable2(GL_TEXTURE_2D);
-	glEnable2(GL_BLEND);
-	glDisable2(GL_ALPHA_TEST);
-	glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glShadeModel2(GL_SMOOTH);
+	GuiRenderContext::setTexture2DState(false);
+	GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GuiRenderContext::setAlphaTestState(false);
+	GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GuiRenderContext::setShadeModel(GL_SMOOTH);
 
 	Tesselator& t = Tesselator::instance;
 	t.begin();
@@ -112,10 +111,7 @@ void GuiComponent::fillGradient( float x0, float y0, float x1, float y1, int col
 	t.vertex(x1, y1, 0);
 	t.draw();
 
-	glShadeModel2(GL_FLAT);
-	glDisable2(GL_BLEND);
-	glEnable2(GL_ALPHA_TEST);
-	glEnable2(GL_TEXTURE_2D);
+	GuiRenderContext::restoreGuiDefaults();
 }
 void GuiComponent::fillHorizontalGradient( int x0, int y0, int x1, int y1, int col1, int col2 ) {
 	fillHorizontalGradient((float)x0, (float)y0, (float)x1, (float)y1, col1, col2);
@@ -131,11 +127,11 @@ void GuiComponent::fillHorizontalGradient( float x0, float y0, float x1, float y
 	float r2 = ((col2 >> 16) & 0xff) / 255.0f;
 	float g2 = ((col2 >> 8) & 0xff) / 255.0f;
 	float b2 = ((col2) & 0xff) / 255.0f;
-	glDisable2(GL_TEXTURE_2D);
-	glEnable2(GL_BLEND);
-	glDisable2(GL_ALPHA_TEST);
-	glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glShadeModel2(GL_SMOOTH);
+	GuiRenderContext::setTexture2DState(false);
+	GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GuiRenderContext::setAlphaTestState(false);
+	GuiRenderContext::setBlendState(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GuiRenderContext::setShadeModel(GL_SMOOTH);
 
 	Tesselator& t = Tesselator::instance;
 	t.begin();
@@ -149,8 +145,5 @@ void GuiComponent::fillHorizontalGradient( float x0, float y0, float x1, float y
 	t.vertex(x1, y1, 0);
 	t.draw();
 
-	glShadeModel2(GL_FLAT);
-	glDisable2(GL_BLEND);
-	glEnable2(GL_ALPHA_TEST);
-	glEnable2(GL_TEXTURE_2D);
+	GuiRenderContext::restoreGuiDefaults();
 }
