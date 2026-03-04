@@ -43,11 +43,6 @@ public:
 private:
 	int charWidths[256];
 	float fcharWidths[256];
-	int listPos;
-
-	int index;
-	int count;
-	RenderBackend::TextureId lists[1024];
 
 	std::string fontName;
 	Textures* _textures;
