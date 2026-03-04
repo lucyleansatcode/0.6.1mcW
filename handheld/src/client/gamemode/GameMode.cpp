@@ -7,6 +7,7 @@
 #include "../player/LocalPlayer.h"
 #ifndef STANDALONE_SERVER
 #include "../sound/SoundEngine.h"
+#include "../particle/ParticleEngine.h"
 #endif
 #include "../../network/RakNetInstance.h"
 #include "../../network/packet/RemoveBlockPacket.h"
