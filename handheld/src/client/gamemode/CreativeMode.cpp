@@ -1,8 +1,5 @@
 #include "CreativeMode.h"
 #include "../Minecraft.h"
-#ifndef STANDALONE_SERVER
-#include "../particle/ParticleEngine.h"
-#endif
 #include "../player/LocalPlayer.h"
 #ifndef STANDALONE_SERVER
 #include "../renderer/LevelRenderer.h"
